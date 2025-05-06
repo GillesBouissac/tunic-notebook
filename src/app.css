@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "./marked.css";
+
+/* Flowbyte modal components+ */
+@plugin 'flowbite/plugin';
+@source "../node_modules/flowbite-svelte/dist";
+
+/*
+@custom-variant dark (&:where(.dark, .dark *));
+*/
