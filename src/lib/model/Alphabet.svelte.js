@@ -1,8 +1,12 @@
 import { AbstractBean } from "$lib/model/AbstractBean.svelte.js";
 import { SymbolBean } from "$lib/model/SymbolBean.svelte.js";
 import fs from 'fs';
+import path from 'path';
 
 export class Alphabet extends AbstractBean {
+
+  static ALPHABET_LOC = "./dist/alphabet/";
+  static ALPHABET_NAME = "alphabet.json";
 
   /**
    * @type {Map<number, SymbolBean>}
@@ -24,6 +28,7 @@ export class Alphabet extends AbstractBean {
     this._items = value;
   }
 
+  /** @returns {Map<number, SymbolBean>} */
   get items() {
     return this._items;
   }
@@ -39,37 +44,39 @@ export class Alphabet extends AbstractBean {
   }
 
   /**
-   * @param {string} filePath
+   * @param {string} fileName
    */
-  static fromFile(filePath) {
+  static fromFile(fileName) {
+    let fullPath = Alphabet.ALPHABET_LOC + path.basename(fileName);
     let document;
     try {
       let jsonText;
-      if ( !fs.existsSync(filePath) ) {
+      if ( !fs.existsSync(fullPath) ) {
         jsonText = "[]";
       }
       else {
-        jsonText = fs.readFileSync(filePath, 'utf8');
+        jsonText = fs.readFileSync(fullPath, 'utf8');
       }
       document = Alphabet.parseJSON(jsonText);
     }
     catch (err) {
-      console.log(`Error reading file ${filePath}: ${err}`);
+      console.log(`Error reading file ${fullPath}: ${err}`);
       return null;
     }
     return document;
   }
 
   /**
-   * @param {string} filePath
+   * @param {string} fileName
    */
-  toFile(filePath) {
+  toFile(fileName) {
+    let fullPath = Alphabet.ALPHABET_LOC + path.basename(fileName);
     let serialized = JSON.stringify(this);
     try {
-      fs.writeFileSync(filePath, serialized);
+      fs.writeFileSync(fullPath, serialized);
     }
     catch (err) {
-      console.log(`Error writing file ${filePath}: ${err}`);
+      console.log(`Error writing file ${fullPath}: ${err}`);
     }
   }
 
@@ -88,27 +95,44 @@ export class Alphabet extends AbstractBean {
     this._fileName = jsonObj["fileName"];
     this._items = new Map(
       jsonObj["items"].map ( item => {
-        let bean = new SymbolBean();
-        bean.fromJSON(item[1]);
+        let bean = SymbolBean.fromJSON(item[1])
         return [item[0], bean]
       })
     );
     return this;
   }
 
-  /** @param {string} fileName */
-  static async fetch (fileName) {
+  /** @param {SymbolBean} bean */
+  async addPersistent (bean) {
+    this.add(bean);
+    const response = await fetch(`/api/alphabet/bean`, {
+      method: 'PUT',
+      headers: { 'Content-type': 'application/json'},
+      body: JSON.stringify(bean)
+    });
+  }
+
+  /** @param {SymbolBean} bean */
+  async deletePersistent (bean) {
+    this.delete(bean);
+    const response = await fetch(`/api/alphabet/bean`, {
+      method: 'DELETE',
+      headers: { 'Content-type': 'application/json'},
+      body: JSON.stringify(bean)
+    });
+  }
+
+  static async download () {
     const response = await fetch(`/api/alphabet`);
     let document;
     if (response.ok) {
       let json = await response?.text();
       document = Alphabet.parseJSON(json);
-      document.fileName = fileName;
     }
     return document;
   }
 
-  async save() {
+  async upload() {
     await fetch(`/api/alphabet`, {
       method: 'POST',
       headers: { 'Content-type': 'application/json'},
@@ -134,11 +158,11 @@ export class Alphabet extends AbstractBean {
   }
 
   /**
-   * @param {number} code
+   * @param {SymbolBean|number} item
    * @return {boolean}
    */
-  delete (code) {
-    return this._items.delete(code);
+  delete (item) {
+    return (typeof item === 'number' ? this._items.delete(item) : this._items.delete(item.code));
   }
 
   /**

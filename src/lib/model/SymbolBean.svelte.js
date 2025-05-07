@@ -1,3 +1,4 @@
+import { SYMBOL_CODE_MASK } from "$lib/graphics/Symbol.svelte.js";
 import { AbstractBean } from "./AbstractBean.svelte.js";
 
 export class SymbolBean extends AbstractBean {
@@ -7,6 +8,7 @@ export class SymbolBean extends AbstractBean {
      * @private
      */
     _code = $state(0);
+
     /**
      * @type {string}
      * @private
@@ -14,7 +16,7 @@ export class SymbolBean extends AbstractBean {
     _meaning = $state("");
 
     /**
-     * @param {number} code
+     * @param {number|string} code
      * @param {string} meaning
      */
     constructor(code = 0x7FFF, meaning = "") {
@@ -39,27 +41,28 @@ export class SymbolBean extends AbstractBean {
         let jsonObj = {
           ...super.toJSON(),
           class: "SymbolBean",
-          code: this._code,
+          code: this.codeString,
           meaning: this._meaning
         };
         return jsonObj;
     }
 
     /** @param {any} jsonObj */
-    fromJSON(jsonObj) {
-        super.fromJSON(jsonObj);
-        this._code = jsonObj['code'];
-        this._meaning = jsonObj['meaning'];
-        return this;
+    static fromJSON(jsonObj) {
+        let newObj = new SymbolBean();
+        newObj.code = jsonObj['code'];
+        newObj.meaning = jsonObj['meaning'];
+        return newObj;
     }
 
     /**
-     * @param {number} value
+     * @param {number|string} value
      */
     set code(value) {
-        this._code = value;
+        this._code = (typeof value === 'number' ? value : parseInt(value)) & SYMBOL_CODE_MASK;
     }
 
+    /** @return {number} */
     get code() {
         return this._code;
     }

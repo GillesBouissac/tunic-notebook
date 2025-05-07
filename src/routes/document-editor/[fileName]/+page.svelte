@@ -2,51 +2,39 @@
   import { page } from '$app/state';
   import { onMount } from "svelte";
   import { marked } from "marked";
-  import { Textarea } from "flowbite-svelte";
-  import { SymbolDocument, Alphabet, SymbolBean } from "$lib/model/model.svelte.js";
-	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
+  import { GradientButton, Textarea } from "flowbite-svelte";
+  import { Notebook, Alphabet, SymbolBean } from "$lib/model/model.svelte";
+  import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import SymbolInteractive from "$lib/graphics/SymbolInteractive.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
+  import Fa from 'svelte-fa';
+  import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
 
   /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
 
   /** @type {string|null} */
   let documentName = page.params.fileName;
 
-  /** @type {SymbolDocument|null} */
+  /** @type {Notebook|null} */
   let textdoc = $derived(null);
 
   /** @type {Alphabet|undefined} */
   let alphabet = $derived(undefined);
 
-  /** @type {number} */
-  let nbRowInitial = $state(5);
-
+  /** @type {HTMLTextAreaElement|undefined} */
+  let textarea = $state();
+  
   let bean = new SymbolBean(0xFFFF);
 
   async function fetchData() {
     if (documentName) {
-      let newdoc = await SymbolDocument.fetch(documentName);
-      if (!newdoc) {
-        newdoc = new SymbolDocument();
-        newdoc.fileName = documentName;
-        newdoc.title = documentName ? documentName : "New Document";
-        newdoc.image = documentName?.substring(0, documentName?.lastIndexOf(".")) + ".jpg";
-        newdoc.text = "";
-        newdoc.save();
-      }
-      if (newdoc) {
-        textdoc = newdoc;
-      }
-      nbRowInitial = (textdoc?.text.match(/\n/g) || []).length
+      let newdoc = await Notebook.download(documentName);
+      if (!newdoc) newdoc = new Notebook(documentName);
+      if (newdoc)  textdoc = newdoc;
     }
     if (!alphabet) {
-      alphabet = await Alphabet.fetch("alphabet");
-      /** @type {TunicOptions} */
-      const options = {
-    	  alphabet: alphabet?.items
-      };
-      marked.use(markedTunic(options));
+      alphabet = await Alphabet.download();
+      marked.use(markedTunic({alphabet: alphabet?.items}));
     }
   }
 
@@ -55,20 +43,31 @@
   });
 
   /** @param {string | undefined} text */
-  async function saveDocument(text) {
-    textdoc?.save();
+  function saveDocument(text) {
+    textdoc?.upload();
   }
+
+  /**
+   * Insert text in textArea at current position
+   * @param text {string}
+   */
+  function insertText (text) {
+    if (textarea) {
+      textarea.focus();
+      document.execCommand("insertText", false, text);
+    }
+  };
 
   /** @param {KeyboardEvent} event */
   function handleKeyDown (event) {
-    // @ts-ignore
-    if (event.target?.id=="text-editor") {
-      if (event.key == "Tab") {
-        event.preventDefault();
-        document.execCommand("insertText", false, '\t');
-      }
-      console.log("In text editor");
+    if (event.key == "Tab") {
+      insertText('\t');
+      event.preventDefault();
     }
+  }
+
+  function onButtonInsertSymbol() {
+    insertText(`tunic(0x${bean.code.toString(16).toUpperCase()})`);
   }
 
   onMount(() => {
@@ -77,29 +76,31 @@
 
 </script>
 
-<svelte:window on:keydown={handleKeyDown}/>
 {#if textdoc && alphabet}
 <div class="grid grid-cols-2 w-full">
 
   <div class="m-2 h-full">
-    <div class="grid grid-cols-2 w-full m-2">
+    <div class="relative grid grid-cols-2 w-full m-2">
       <div class="mx-auto w-full">
         <ImagePanZoom imageName={textdoc.image}></ImagePanZoom>
       </div>
-      <div class="flex items-center justify-items-center h-full">
+      <div class="flex items-center justify-center h-full">
         <SymbolInteractive {bean} segmentWidth={2.5} svgClass="image-box"/>
+      </div>
+      <div class="button-box">
+        <GradientButton shadow pill={true} class="p-2!" color="cyan" onclick={onButtonInsertSymbol}>
+            <Fa icon={faFileArrowDown} />
+        </GradientButton>
       </div>
     </div>
 
     <div>
-      <Textarea id="text-editor" class="text-box" bind:value={textdoc.text}></Textarea>
+      <textarea bind:this={textarea} class="text-box" bind:value={textdoc.text} onkeydown={handleKeyDown}></textarea>
     </div>
   </div>
-
   <div class="marked-styles marked-box overflow-auto m-2">
     {@html marked(textdoc.text)}
   </div>
-
 </div>
 
 {:else}
@@ -113,10 +114,15 @@
     height: 30dvh;
   }
   :global(.text-box) {
-    height: 60dvh;
+    height: 58dvh;
+    width: 100%;
   }
   :global(.marked-box) {
     max-height: 90dvh;
   }
+  .button-box {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+  }
 </style>
-

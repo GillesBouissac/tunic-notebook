@@ -1,14 +1,11 @@
 import { error, type RequestHandler } from "@sveltejs/kit";
-import { completeAlphabet } from '$lib/server/utils.svelte.js';
 import { Alphabet } from '$lib/model/model.svelte.js';
-
-const ALPHABET_LOC = "./dist/alphabet/alphabet.json";
 
 /** Retrieve a document */
 export const GET: RequestHandler = async ({}) => {
-  let document = Alphabet.fromFile(ALPHABET_LOC);
+  let document = Alphabet.fromFile(Alphabet.ALPHABET_NAME);
   if (!document) {
-    return error(404, `File ${ALPHABET_LOC} not found`);
+    return error(404, `File ${Alphabet.ALPHABET_NAME} not found`);
   }
   return new Response(JSON.stringify(document));
 };
@@ -17,7 +14,6 @@ export const GET: RequestHandler = async ({}) => {
 export const POST: RequestHandler = async ({ params, request }) => {
   let body = await request.text();
   let document = Alphabet.parseJSON(body);
-  document.toFile(ALPHABET_LOC);
-  completeAlphabet();
+  document.toFile(Alphabet.ALPHABET_NAME);
   return new Response();
 };

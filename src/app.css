@@ -8,3 +8,40 @@
 /*
 @custom-variant dark (&:where(.dark, .dark *));
 */
+
+:root {
+    --decoded-color: rgb(238, 43, 205);
+}
+
+.meaning {
+    color:var(--decoded-color, blue)
+}
+
+div:has(.table-90) {
+    height: 90dvh;
+}
+
+.table-column-sort-asc {
+    cursor: pointer;
+}
+
+.table-column-sort-dsc {
+    cursor: pointer;
+}
+
+.table-column-sort-none {
+    cursor: pointer;
+}
+
+.table-column-sort-asc::after {
+    content: " \25B2";
+}
+
+.table-column-sort-dsc::after {
+    content: " \25BC";
+}
+
+.table-column-sort-none::after {
+    /** Unsorted column has same width */
+    content: "\2001";
+}

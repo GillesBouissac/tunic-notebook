@@ -1,12 +1,7 @@
 <script>
 	import '../app.css';
-	import Sidebar from '$lib/layout/Sidebar.svelte'
 	import Navbar from '$lib/layout/Navbar.svelte'
-
-	let open = $state(false);
 	let { children } = $props();
-	let mainClass = $derived(open ? "lg:ml-40" : "");
-
 </script>
 
 <svelte:head>
@@ -15,9 +10,8 @@
 </svelte:head>
 
 <Navbar />
-<Sidebar bind:open={open}/>
 <div class="flex px-4 mx-auto w-full">
-	<main class="{mainClass} w-full mx-auto">
+	<main class="w-full mx-auto">
 		{@render children()}
 	</main>
 </div>

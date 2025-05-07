@@ -1,14 +1,16 @@
 import { type Token, type Tokens, type TokensList } from 'marked';
 import { SymbolBean } from "$lib/model/SymbolBean.svelte.js";
-import { renderSymbol } from '$lib/graphics/Symbol.svelte' ;
+import { renderSymbol, SYMBOL_CODE_MASK } from '$lib/graphics/Symbol.svelte' ;
 
 export const SYMBOL_PATTERN = /^tunic\s*\(\s*(0x[a-z0-9]+|[0-9]+)\s*\)(\s*)/i;
 export const SYMBOL_PATTERN_GLOBAL = /tunic\s*\(\s*(0x[a-z0-9]+|[0-9]+)\s*\)(\s*)/gi;
+export const SYMBOL_WORD_PATTERN = /(tunic\s*\(\s*(0x[a-z0-9]+|[0-9]+)\s*\))+/gi;
+
 export type TunicOptions = {
     alphabet?: Map<number,SymbolBean>;
 }
 
-const TAB_SIZE = 6;
+const TAB_SIZE = 2;
 
 /**
  * Marked extension builder
@@ -56,7 +58,7 @@ function tunicSymbolFromCode(options: TunicOptions) {
 				return {
 					type: 'tunicSymbolCode',
 					raw: match[0],
-                    code: parseInt(match[1]),
+                    code: parseInt(match[1]) & SYMBOL_CODE_MASK,
 					spaces: match[2].replaceAll(/[^ \t]/g,"").replaceAll(/\t/g," ".repeat(TAB_SIZE)).length
 				};
 			}

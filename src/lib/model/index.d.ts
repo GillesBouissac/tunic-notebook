@@ -12,7 +12,7 @@ class TextBean extends AbstractBean {
     text: string;
 }
 
-class SymbolDocument extends AbstractBean {
+class Notebook extends AbstractBean {
     beans: AbstractBean[];
 }
  */

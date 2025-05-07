@@ -20,7 +20,7 @@
     <a href="/gallery/image?name={imageName}" onclick={beforeNavigate}>
         <img alt="{imageName}" src="/api/screenshots/{imageName}" class="mx-auto"/>
     </a>
-    <div class="goto-document">
+    <div class="button-box">
         <GradientButton shadow pill={true} class="p-2!" color="cyan" href="/document-editor/{documentName}/" onclick={beforeNavigate}>
             <Fa icon={faBook} />
         </GradientButton>
@@ -35,7 +35,7 @@
     .thumbnail-container {
         position: relative;
     }
-    .goto-document {
+    .button-box {
         position: absolute;
         bottom: 10px;
         right: 10px;

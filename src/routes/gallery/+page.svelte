@@ -5,7 +5,7 @@
   import { page } from '$app/state';
   import ThumbNail from "$lib/layout/ThumbNail.svelte";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
-  import { SymbolDocument, Alphabet } from "$lib/model/model.svelte";
+  import { Notebook, Alphabet } from "$lib/model/model.svelte";
   /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
 
   /** @type {{imagefile:string, documentfile:string, documentcontent:string}[]} */
@@ -23,18 +23,18 @@
       const basename = imagefile.replace(/\.[^/.]+$/, "");
       const jsonfile = `${basename}.json`;
       const answer = await fetch(`/api/documents/${jsonfile}`);
-      let document = new SymbolDocument();
+      let document = new Notebook();
       if (answer.ok) {
-        document = SymbolDocument.parseJSON(await answer.text());
+        document = Notebook.parseJSON(await answer.text());
       }
       documents.push({
         imagefile:imagefile,
         documentfile:jsonfile,
-        documentcontent:document.text.length==0 ? "Click to add a description" : document.text
+        documentcontent:document.text.length==0 ? "Click to add notes" : document.text
       });
     }
     if (!alphabet) {
-      alphabet = await Alphabet.fetch("alphabet");
+      alphabet = await Alphabet.download();
       /** @type {TunicOptions} */
       const options = {
     	  alphabet: alphabet?.items

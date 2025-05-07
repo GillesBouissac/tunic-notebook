@@ -4,7 +4,7 @@ export enum Shape {
     circle
 }
 
-interface SymbolPart {
+export interface SymbolPart {
     shape: Shape;
     code: number;
     x1: number;
@@ -15,6 +15,8 @@ interface SymbolPart {
 }
 type SymbolPartList = SymbolPart[];
 
+// Removes the reserved values
+export const SYMBOL_CODE_MASK = 0xFFFF & ~0x0080 & ~0x0800;
 export const SYMBOL_PARTS: SymbolPartList = [
     // Symbol upper part
     { shape: Shape.segment, x1: -1, y1:   5, x2: 10, y2:   0, code: 0x0001 },
@@ -61,14 +63,14 @@ function renderHeader(code: number, meaning: string|undefined): string {
     const stylePretty = `
         display:inline-block;
         vertical-align:middle;
-        height:calc(var(--icon-size,3rem)*1);
+        height:calc(var(--icon-size,2rem)*1);
         stroke:var(--icon-color, currentcolor);
         stroke-width:2;
         stroke-linecap: round;
     `;
     const style = stylePretty.replaceAll(/\n/g, "").replaceAll(/[ ]/g, "")
     if (meaning && meaning != "") {
-        return `<span style="color:blue">${meaning}`;
+        return `<span style="color:var(--decoded-color, blue)">${meaning}`;
     }
     return `<svg viewBox="-1 -4 22 44" style="${style}">
         <g>
