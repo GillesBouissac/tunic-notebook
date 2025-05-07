@@ -11,21 +11,20 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "devDependencies": {
-    "@fortawesome/free-brands-svg-icons": "latest",
-    "@fortawesome/free-solid-svg-icons": "latest",
-    "@sveltejs/adapter-auto": "latest",
-    "@sveltejs/kit": "latest",
-    "@tailwindcss/vite": "latest",
-    "@types/node": "latest",
-    "flowbite-svelte": "latest",
-    "flowbite-svelte-icons": "latest",
-    "marked": "latest",
-    "sass-embedded": "^1.87.0",
-    "svelte": "latest",
-    "svelte-check": "latest",
-    "svelte-fa": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "vite-plugin-ssr": "latest"
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@sveltejs/adapter-auto": "^6.0.0",
+    "@sveltejs/kit": "^2.20.8",
+    "@tailwindcss/vite": "^4.1.5",
+    "@types/node": "^22.15.14",
+    "flowbite-svelte": "^1.0.3",
+    "flowbite-svelte-icons": "^2.1.1",
+    "marked": "^15.0.11",
+    "svelte": "^5.28.2",
+    "svelte-check": "^4.1.7",
+    "svelte-fa": "^4.0.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-ssr": "^0.4.142"
   }
 }
