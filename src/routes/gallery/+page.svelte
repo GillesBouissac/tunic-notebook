@@ -84,10 +84,10 @@
 <div class="grid grid-cols-1 gap-4 mx-auto">
 	{#each documents as document}
     <div id="{document.imagefile}" use:onSectionCreated class="grid grid-cols-4 gap-4 mx-auto">
-      <div class="flex items-center thumbnail-container">
+      <div class="flex items-center thumbnail-container rounded-lg">
         <div class="m-3"><ThumbNail imageName={document.imagefile} {navigateFrom}></ThumbNail></div>
       </div>
-      <div class="relative marked-local col-span-3">
+      <div class="relative marked-local col-span-3 rounded-lg">
         <div class="marked-styles m-3">{@html marked(document.documentcontent)}</div>
         <div class="button-box">
           <Button shadow class="px-4" color="blue" onclick={navigateTo(document.imagefile, document.documentfile)}>

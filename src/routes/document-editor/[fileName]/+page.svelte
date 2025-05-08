@@ -1,17 +1,15 @@
 <script>
   import Fa from 'svelte-fa';
-  import { faFileArrowDown, faKey } from '@fortawesome/free-solid-svg-icons';
+  import { faBatteryEmpty, faBatteryFull, faFileArrowDown, faKey, faRepeat } from '@fortawesome/free-solid-svg-icons';
   import { page } from '$app/state';
   import { onMount } from "svelte";
   import { marked } from "marked";
-  import { Button, Toggle } from "flowbite-svelte";
+  import { Button, Select, Toggle } from "flowbite-svelte";
   import { Notebook, Alphabet, SymbolBean } from "$lib/model/model.svelte";
   import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
   import { NoteTooltip } from '$lib/graphics/graphics.svelte';
-
-  /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
 
   /** @type {string|null} */
   let documentName = page.params.fileName;
@@ -28,9 +26,14 @@
   /** @type {boolean} */
   let decodeSymbols = $state(true);
 
+  /** @type {{name:string, value: number}[]}} */
+  let selectBean =$state([]);
+
+  /** @type {{alphabet:Map<number,SymbolBean>}}*/
   let markedOptions = $state({alphabet: new Map()});
 
-  let bean = new SymbolBean(0xFFFF);
+  /** @type {SymbolBean} */
+  let sandboxBean = new SymbolBean(0xFFFF);
 
   async function fetchData() {
     if (documentName) {
@@ -41,6 +44,14 @@
       marked.use(markedTunic(markedOptions));
     }
   }
+
+  $effect(() => {
+    if (alphabet) {
+      selectBean = [...alphabet.items.values()].map((v, _) => {
+        return {value:v.code, name:v.meaning}
+      });
+    }
+  });
 
   $effect(() => {
     saveDocument(textdoc?.text)
@@ -77,7 +88,7 @@
   }
 
   function onButtonInsertSymbol() {
-    insertText(`tunic(0x${bean.code.toString(16).toUpperCase()})`);
+    insertText(`tunic(0x${sandboxBean.code.toString(16).toUpperCase()})`);
   }
 
   onMount(() => {
@@ -90,25 +101,38 @@
 <div class="grid grid-cols-2 w-full">
 
   <div class="m-2 h-full">
-    <div class="relative grid grid-cols-2 w-full m-2">
-      <div class="mx-auto w-full">
+    <div class="grid grid-cols-6 w-full m-2">
+      <div class="mx-auto w-full col-span-3">
         <ImagePanZoom imageName={textdoc.image}></ImagePanZoom>
         <NoteTooltip placement="bottom">You can pan and zoom this image to focus on symbols</NoteTooltip>
       </div>
-      <div class="flex items-center justify-center h-full">
-        <SymbolInteractive {bean} segmentWidth={2.5} svgClass="image-box"/>
+      <div class="flex items-center justify-center h-full col-span-2">
+        <SymbolInteractive bean={sandboxBean} segmentWidth={2.5} svgClass="image-box"/>
       </div>
-      <NoteTooltip placement="bottom">Use this tool to reproduce a symbol you see in image</NoteTooltip>
-      <div class="button-box">
-        <Button shadow class="px-4" color="blue" onclick={onButtonInsertSymbol}>
+      <NoteTooltip placement="bottom">Use this tool to reproduce a symbol you see in the image</NoteTooltip>
+      <div class="button-bo grid grid-cols-1 p-4">
+        <Select class="text-center" placeholder="Alphabet ..." items={selectBean} bind:value={sandboxBean.code}></Select>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=0x0000}>
+          <Fa icon={faBatteryEmpty} /><span>&nbsp;Empty</span>
+        </Button>
+        <NoteTooltip placement="right">Empties all the segments</NoteTooltip>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=0xFFFF}>
+          <Fa icon={faBatteryFull} /><span>&nbsp;Full</span>
+        </Button>
+        <NoteTooltip placement="right">Fills all the segments</NoteTooltip>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=~sandboxBean.code}>
+          <Fa icon={faRepeat} /><span>&nbsp;Invert</span>
+        </Button>
+        <NoteTooltip placement="right">Invert every segment</NoteTooltip>
+        <Button shadow class="px-4 mt-2" color="blue" onclick={onButtonInsertSymbol}>
             <Fa icon={faFileArrowDown} /><span>&nbsp;Insert</span>
         </Button>
-        <NoteTooltip placement="bottom">Insert the displayed symbol in the document at current position.<br>Can be undone using &lt;Ctrl&gt;+Z</NoteTooltip>
+        <NoteTooltip placement="bottom">Insert the symbol in the document at current position.<br>Can be undone using &lt;Ctrl&gt;+Z</NoteTooltip>
       </div>
     </div>
 
     <div>
-      <textarea bind:this={textarea} class="text-box" bind:value={textdoc.text} onkeydown={handleKeyDown}></textarea>
+      <textarea bind:this={textarea} class="text-box border-0" bind:value={textdoc.text} onkeydown={handleKeyDown}></textarea>
     </div>
   </div>
   <div class="relative">
@@ -138,11 +162,6 @@
   }
   :global(.marked-box) {
     max-height: 90dvh;
-  }
-  .button-box {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
   }
   .toggle-box {
       position: absolute;
