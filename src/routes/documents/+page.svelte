@@ -1,6 +1,5 @@
 <script>
-  import ThumbNail from "$lib/layout/ThumbNail.svelte";
-
+  import { ThumbNail } from "$lib/graphics/graphics.svelte";
   import { onMount } from "svelte";
 
   /**

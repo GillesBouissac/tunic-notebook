@@ -5,12 +5,10 @@
   import { marked } from "marked";
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import ThumbNail from "$lib/layout/ThumbNail.svelte";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { Notebook, Alphabet } from "$lib/model/model.svelte";
-  import { GradientButton } from "flowbite-svelte";
-  import { NoteTooltip } from "$lib/graphics/graphics.svelte";
-  /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
+  import { Button } from "flowbite-svelte";
+  import { NoteTooltip, ThumbNail } from "$lib/graphics/graphics.svelte";
 
   /** @type {{imagefile:string, documentfile:string, documentcontent:string}[]} */
   let documents = $state([]);
@@ -39,11 +37,7 @@
     }
     if (!alphabet) {
       alphabet = await Alphabet.download();
-      /** @type {TunicOptions} */
-      const options = {
-    	  alphabet: alphabet?.items
-      };
-      marked.use(markedTunic(options));
+      marked.use(markedTunic({ alphabet: alphabet?.items }));
     }
   }
 
@@ -96,9 +90,9 @@
       <div class="relative marked-local col-span-3">
         <div class="marked-styles m-3">{@html marked(document.documentcontent)}</div>
         <div class="button-box">
-          <GradientButton shadow class="p-2!" color="blue" onclick={navigateTo(document.imagefile, document.documentfile)}>
+          <Button shadow class="px-4" color="blue" onclick={navigateTo(document.imagefile, document.documentfile)}>
             <Fa icon={faPencil} /><span>&nbsp;Edit</span>
-          </GradientButton>
+          </Button>
           <NoteTooltip placement="left">Edit the note in note editor</NoteTooltip>
         </div>
       </div>
