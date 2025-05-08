@@ -26,10 +26,10 @@
     for ( const imagefile of imagenames ) {
       const basename = imagefile.replace(/\.[^/.]+$/, "");
       const jsonfile = `${basename}.json`;
-      const answer = await fetch(`/api/documents/${jsonfile}`);
-      let document = new Notebook();
-      if (answer.ok) {
-        document = Notebook.parseJSON(await answer.text());
+      let document = await Notebook.download(jsonfile);
+      if (!document) {
+        document = Notebook.newDocument(jsonfile, imagefile);
+        await document.upload();
       }
       documents.push({
         imagefile:imagefile,

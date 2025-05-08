@@ -37,14 +37,26 @@ export class Notebook {
    */
   _image = "";
 
-  /** @param {string=} documentName  */
-  constructor(documentName) {
+  /**
+   * @param {string=} documentName
+   * @param {string=} image
+   * @private
+   */
+  constructor(documentName, image) {
     if (documentName) {
       this.fileName = documentName;
       this.title = documentName ? documentName : "New Document";
-      this.image = documentName?.substring(0, documentName?.lastIndexOf(".")) + ".jpg";
+      this.image = image ? image : "";
       this.text = "";
     }
+  }
+
+  /**
+   * @param {string} documentName
+   * @param {string} image
+   */
+  static newDocument(documentName, image) {
+    return new Notebook(documentName, image);
   }
 
   get text() {

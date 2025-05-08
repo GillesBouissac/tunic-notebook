@@ -21,10 +21,10 @@ export class TokenLocation {
     this._word = value;
     if (this._word) {
       let match = this._word.matchAll(SYMBOL_PATTERN_GLOBAL);
-      this._wordChars = [...match.map(e => {
+      this._wordChars = [...match].map(e => {
         let symbol = new SymbolBean(e[1]);
         return symbol.code;
-      })];
+      });
     }
   }
 
@@ -117,16 +117,16 @@ export class NotebookStatistics {
    * @private
    */
   fileMapToJSON(fileMap) {
-    return [...fileMap.entries().map(([k,v]) => {
+    return [...fileMap.entries()].map(([k,v]) => {
       return [k, v.map(tl => tl.toJSON())]
-    })]
+    })
   }
 
   /** @private */
   itemsMapToJSON() {
-    return [...this._items.entries().map(([k,v]) => {
+    return [...this._items.entries()].map(([k,v]) => {
       return [k, this.fileMapToJSON(v)]
-    })]
+    })
   }
 
   /**

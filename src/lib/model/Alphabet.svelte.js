@@ -43,21 +43,19 @@ export class Alphabet extends AbstractBean {
     return this._fileName;
   }
 
-  /**
-   * @param {string} fileName
-   */
-  static fromFile(fileName) {
-    let fullPath = Alphabet.ALPHABET_LOC + path.basename(fileName);
+  /** */
+  static fromFile() {
+    let fullPath = Alphabet.ALPHABET_LOC + Alphabet.ALPHABET_NAME;
     let document;
     try {
       let jsonText;
       if ( !fs.existsSync(fullPath) ) {
-        jsonText = "[]";
+        document = new Alphabet();
       }
       else {
         jsonText = fs.readFileSync(fullPath, 'utf8');
+        document = Alphabet.parseJSON(jsonText);
       }
-      document = Alphabet.parseJSON(jsonText);
     }
     catch (err) {
       console.log(`Error reading file ${fullPath}: ${err}`);
@@ -66,11 +64,9 @@ export class Alphabet extends AbstractBean {
     return document;
   }
 
-  /**
-   * @param {string} fileName
-   */
-  toFile(fileName) {
-    let fullPath = Alphabet.ALPHABET_LOC + path.basename(fileName);
+  /** */
+  toFile() {
+    let fullPath = Alphabet.ALPHABET_LOC + Alphabet.ALPHABET_NAME;
     let serialized = JSON.stringify(this);
     try {
       fs.writeFileSync(fullPath, serialized);

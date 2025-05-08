@@ -3,7 +3,7 @@ import { Alphabet } from '$lib/model/model.svelte.js';
 
 /** Retrieve a document */
 export const GET: RequestHandler = async ({}) => {
-  let document = Alphabet.fromFile(Alphabet.ALPHABET_NAME);
+  let document = Alphabet.fromFile();
   if (!document) {
     return error(404, `File ${Alphabet.ALPHABET_NAME} not found`);
   }
@@ -14,6 +14,6 @@ export const GET: RequestHandler = async ({}) => {
 export const POST: RequestHandler = async ({ params, request }) => {
   let body = await request.text();
   let document = Alphabet.parseJSON(body);
-  document.toFile(Alphabet.ALPHABET_NAME);
+  document.toFile();
   return new Response();
 };

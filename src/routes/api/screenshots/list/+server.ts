@@ -3,7 +3,7 @@ import path from 'path';
 
 /** List of screenshots to analyze */
 export const GET: RequestHandler = async () => {
-  const screenshots = import.meta.glob("/dist/screenshots/*.jpg", {
+  const screenshots = import.meta.glob("/dist/screenshots/*.*", {
     query: "?raw",
     import: "default",
   });

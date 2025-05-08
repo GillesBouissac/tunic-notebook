@@ -13,19 +13,23 @@ function buildDocumentsStatistics(): NotebookStatistics {
   for (const file in files) {
     const document = Notebook.fromFile(`.${file}`);
     const matchWords = document?.text.matchAll(SYMBOL_WORD_PATTERN);
-    matchWords?.forEach (word => {
-      const matchChar = word[0].matchAll(SYMBOL_PATTERN_GLOBAL)
-      matchChar?.forEach (token => {
-        let symbol = new SymbolBean(token[1]);
-        let context = new TokenLocation();
-        context.fileName = file;
-        context.token = token[0];
-        context.tokenStart = token.index;
-        context.word = word[0];
-        context.wordStart = word.index;
-        stats.add(symbol, context);
+    if (matchWords) {
+      [...matchWords].forEach (word => {
+        const matchChar = word[0].matchAll(SYMBOL_PATTERN_GLOBAL)
+        if (matchChar) {
+           [...matchChar].forEach (token => {
+            let symbol = new SymbolBean(token[1]);
+            let context = new TokenLocation();
+            context.fileName = file;
+            context.token = token[0];
+            context.tokenStart = token.index;
+            context.word = word[0];
+            context.wordStart = word.index;
+            stats.add(symbol, context);
+          });
+        }
       });
-    });
+    }
   }
 
   return stats;
@@ -33,7 +37,7 @@ function buildDocumentsStatistics(): NotebookStatistics {
 
 /** Retrieve a document */
 export const GET: RequestHandler = async ({}) => {
-  let alphabet = Alphabet.fromFile(Alphabet.ALPHABET_NAME);
+  let alphabet = Alphabet.fromFile();
   if (!alphabet) {
     return error(404, `File ${Alphabet.ALPHABET_NAME} not found`);
   }

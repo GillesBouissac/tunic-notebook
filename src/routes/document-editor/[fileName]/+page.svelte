@@ -29,9 +29,7 @@
 
   async function fetchData() {
     if (documentName) {
-      let newdoc = await Notebook.download(documentName);
-      if (!newdoc) newdoc = new Notebook(documentName);
-      if (newdoc)  textdoc = newdoc;
+      textdoc = await Notebook.download(documentName);
     }
     if (!alphabet) {
       alphabet = await Alphabet.download();
@@ -109,7 +107,7 @@
 
 {:else}
   <div class="flex h-full w-full">
-    <text class="h-100 w-full text-center content-center">Edit document '{documentName}'</text>
+    <text class="h-100 w-full text-center content-center">Missing document '{documentName}'</text>
   </div>
 {/if}
 
