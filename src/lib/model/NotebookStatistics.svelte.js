@@ -1,5 +1,6 @@
 import path from "path";
 import { SymbolBean } from "./SymbolBean.svelte";
+import { SYMBOL_PATTERN_GLOBAL } from "$lib/marked/marked-tunic.svelte";
 
 /** Context of a token in a document */
 export class TokenLocation {
@@ -9,10 +10,42 @@ export class TokenLocation {
   token = "";
   /** @type {number} */
   tokenStart = 0;
-  /** @type {string} */
-  word = "";
   /** @type {number} */
   wordStart = 0;
+  /** @type {string} */
+  _word = "";
+  /** @type {number[]} */
+  _wordChars = [];
+
+  set word(value) {
+    this._word = value;
+    if (this._word) {
+      let match = this._word.matchAll(SYMBOL_PATTERN_GLOBAL);
+      this._wordChars = [...match.map(e => {
+        let symbol = new SymbolBean(e[1]);
+        return symbol.code;
+      })];
+    }
+  }
+
+  get word() {
+    return this._word;
+  }
+
+  get wordChars() {
+    return this._wordChars;
+  }
+
+  toJSON() {
+    let jsonObj = {
+      fileName: this.fileName,
+      token:this.token,
+      tokenStart:this.tokenStart,
+      word:this.word,
+      wordStart:this.wordStart,
+    };
+    return jsonObj;
+  }
 
   /** @param {any} jsonObj */
   static fromJSON(jsonObj) {
@@ -85,7 +118,7 @@ export class NotebookStatistics {
    */
   fileMapToJSON(fileMap) {
     return [...fileMap.entries().map(([k,v]) => {
-      return [k, v]
+      return [k, v.map(tl => tl.toJSON())]
     })]
   }
 

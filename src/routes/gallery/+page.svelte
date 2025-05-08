@@ -1,4 +1,6 @@
 <script>
+  import Fa from "svelte-fa";
+  import { faPencil } from "@fortawesome/free-solid-svg-icons";
   import { onMount } from "svelte";
   import { marked } from "marked";
   import { goto } from '$app/navigation';
@@ -6,6 +8,8 @@
   import ThumbNail from "$lib/layout/ThumbNail.svelte";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { Notebook, Alphabet } from "$lib/model/model.svelte";
+  import { GradientButton } from "flowbite-svelte";
+  import { NoteTooltip } from "$lib/graphics/graphics.svelte";
   /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
 
   /** @type {{imagefile:string, documentfile:string, documentcontent:string}[]} */
@@ -30,7 +34,7 @@
       documents.push({
         imagefile:imagefile,
         documentfile:jsonfile,
-        documentcontent:document.text.length==0 ? "Click to add notes" : document.text
+        documentcontent:document.text.length==0 ? "Use edit button to add notes" : document.text
       });
     }
     if (!alphabet) {
@@ -70,11 +74,11 @@
    * Callback called to redirect to a document editor
    * @param imagefile {string}
    * @param documentfile {string}
-   * @return {Promise<void>}
    */
-  async function navigateTo(imagefile, documentfile) {
-    return navigateFrom(imagefile)
-      .then(() => goto(`/document-editor/${documentfile}/`));
+  function navigateTo(imagefile, documentfile) {
+    return () => {
+      navigateFrom(imagefile).then(() => goto(`/document-editor/${documentfile}/`));
+    }
   }
 
   onMount(() => {
@@ -89,10 +93,14 @@
       <div class="flex items-center thumbnail-container">
         <div class="m-3"><ThumbNail imageName={document.imagefile} {navigateFrom}></ThumbNail></div>
       </div>
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="marked-local col-span-3" onclick={() => {navigateTo(document.imagefile, document.documentfile)}}>
+      <div class="relative marked-local col-span-3">
         <div class="marked-styles m-3">{@html marked(document.documentcontent)}</div>
+        <div class="button-box">
+          <GradientButton shadow class="p-2!" color="blue" onclick={navigateTo(document.imagefile, document.documentfile)}>
+            <Fa icon={faPencil} /><span>&nbsp;Edit</span>
+          </GradientButton>
+          <NoteTooltip placement="left">Edit the note in note editor</NoteTooltip>
+        </div>
       </div>
     </div>
   {/each}
@@ -102,9 +110,13 @@
 <style>
   .marked-local {
     background-color: #eee;
-    cursor: pointer;
   }
   .thumbnail-container {
     background-color: #eee;
+  }
+  .button-box {
+      position: absolute;
+      top: 10px;
+      right: 10px;
   }
 </style>

@@ -16,6 +16,7 @@
 
   const Column = {
     symbol: "symbol",
+    code: "code",
     meaning: "meaning",
     wordcount: "wordcount",
     filecount: "filecount",
@@ -23,6 +24,7 @@
   /** @type {Map<string, function (SymbolBean,SymbolBean): number>} */
   const sortfn = new Map([
     [ "symbol", (a, b) => a.code - b.code ],
+    [ "code", (a, b) => a.code - b.code ],
     [ "meaning", (a, b) => a.meaning.localeCompare(b.meaning) ],
     [ "wordcount", (a, b) => stats.wordsRef(a.code).length - stats.wordsRef(b.code).length ],
     [ "filecount", (a, b) => stats.filesRef(a.code).length - stats.filesRef(b.code).length ],
@@ -88,6 +90,7 @@
   <Table hoverable={true} class="text-center table-90">
     <TableHead class="sticky top-0">
       <TableHeadCell class={sortColumn==Column.symbol ? sortClass : "table-column-sort-none"} onclick={onSort(Column.symbol)}>Symbol</TableHeadCell>
+      <TableHeadCell class={sortColumn==Column.code ? sortClass : "table-column-sort-none"} onclick={onSort(Column.code)}>Code</TableHeadCell>
       <TableHeadCell class={sortColumn==Column.meaning ? sortClass : "table-column-sort-none"} onclick={onSort(Column.meaning)}>Meaning</TableHeadCell>
       <TableHeadCell class={sortColumn==Column.wordcount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.wordcount)}>Word count</TableHeadCell>
       <TableHeadCell class={sortColumn==Column.filecount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.filecount)}>File count</TableHeadCell>
@@ -96,6 +99,7 @@
       {#each beans as bean}
         <TableBodyRow>
           <TableBodyCell>{@html marked(`tunic(${bean.code})`)}</TableBodyCell>
+          <TableBodyCell>{bean.codeString}</TableBodyCell>
           <TableBodyCell class="meaning">
             <input class="w-100" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="?" />
           </TableBodyCell>

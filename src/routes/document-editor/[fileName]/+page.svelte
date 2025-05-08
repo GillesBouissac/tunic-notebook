@@ -1,14 +1,15 @@
 <script>
+  import Fa from 'svelte-fa';
+  import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
   import { page } from '$app/state';
   import { onMount } from "svelte";
   import { marked } from "marked";
-  import { GradientButton, Textarea } from "flowbite-svelte";
+  import { GradientButton } from "flowbite-svelte";
   import { Notebook, Alphabet, SymbolBean } from "$lib/model/model.svelte";
   import { markedTunic } from "$lib/marked/marked-tunic.svelte";
-  import SymbolInteractive from "$lib/graphics/SymbolInteractive.svelte";
+  import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
-  import Fa from 'svelte-fa';
-  import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
+  import { NoteTooltip } from '$lib/graphics/graphics.svelte';
 
   /** @typedef {import("$lib/marked/marked-tunic.svelte").TunicOptions} TunicOptions */
 
@@ -83,14 +84,17 @@
     <div class="relative grid grid-cols-2 w-full m-2">
       <div class="mx-auto w-full">
         <ImagePanZoom imageName={textdoc.image}></ImagePanZoom>
+        <NoteTooltip arrow={false} placement="right-start">You can pan and zoom this image to focus on symbols</NoteTooltip>
       </div>
       <div class="flex items-center justify-center h-full">
         <SymbolInteractive {bean} segmentWidth={2.5} svgClass="image-box"/>
       </div>
+      <NoteTooltip placement="bottom">Use this tool to reproduce a symbol you see in image</NoteTooltip>
       <div class="button-box">
-        <GradientButton shadow pill={true} class="p-2!" color="cyan" onclick={onButtonInsertSymbol}>
-            <Fa icon={faFileArrowDown} />
+        <GradientButton shadow class="p-2!" color="blue" onclick={onButtonInsertSymbol}>
+            <Fa icon={faFileArrowDown} /><span>&nbsp;Insert</span>
         </GradientButton>
+        <NoteTooltip placement="bottom">Insert the displayed symbol in the document at current position.<br>Can be undone using &lt;Ctrl&gt;+Z</NoteTooltip>
       </div>
     </div>
 

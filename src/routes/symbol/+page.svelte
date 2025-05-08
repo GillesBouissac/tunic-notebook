@@ -1,6 +1,6 @@
 <script>
   import { SymbolBean } from "$lib/model/model.svelte.js";
-  import SymbolInteractive from "$lib/graphics/SymbolInteractive.svelte";
+  import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
 
   /**
    * @param {number} min
