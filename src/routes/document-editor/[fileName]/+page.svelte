@@ -2,23 +2,20 @@
   import Fa from 'svelte-fa';
   import { faBatteryEmpty, faBatteryFull, faFileArrowDown, faKey, faRepeat } from '@fortawesome/free-solid-svg-icons';
   import { page } from '$app/state';
-  import { onMount } from "svelte";
   import { marked } from "marked";
   import { Button, Select, Toggle } from "flowbite-svelte";
-  import { Notebook, Alphabet, SymbolBean } from "$lib/model/model.svelte";
+  import { Notebook, SymbolBean } from "$lib/model/model.svelte";
   import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
   import { NoteTooltip } from '$lib/graphics/graphics.svelte';
 
+  let { data } = $props();
+  let alphabet = data.alphabet;
+  let textdoc = data.text;
+
   /** @type {string|null} */
   let documentName = page.params.fileName;
-
-  /** @type {Notebook|null} */
-  let textdoc = $derived(null);
-
-  /** @type {Alphabet|undefined} */
-  let alphabet = $derived(undefined);
 
   /** @type {HTMLTextAreaElement|undefined} */
   let textarea = $state();
@@ -34,16 +31,6 @@
 
   /** @type {SymbolBean} */
   let sandboxBean = new SymbolBean(0xFFFF);
-
-  async function fetchData() {
-    if (documentName) {
-      textdoc = await Notebook.download(documentName);
-    }
-    if (!alphabet) {
-      alphabet = await Alphabet.download();
-      marked.use(markedTunic(markedOptions));
-    }
-  }
 
   $effect(() => {
     if (alphabet) {
@@ -91,10 +78,7 @@
     insertText(`tunic(0x${sandboxBean.code.toString(16).toUpperCase()})`);
   }
 
-  onMount(() => {
-    fetchData();
-  });
-
+  marked.use(markedTunic(markedOptions));
 </script>
 
 {#if textdoc && alphabet}

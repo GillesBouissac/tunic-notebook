@@ -1,15 +1,13 @@
 <script>
   import { onMount } from "svelte";
   import { marked } from "marked";
-  import { Alphabet, NotebookStatistics, SymbolBean, TokenLocation } from "$lib/model/model.svelte.js";
+  import { SymbolBean } from "$lib/model/model.svelte.js";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
 
-  /** @type {Alphabet|undefined} */
-  let alphabet = $state(new Alphabet());
-
-  /** @type {NotebookStatistics} */
-  let stats = $state(new NotebookStatistics());
+  let { data } = $props();
+  let alphabet = data.alphabet;
+  let stats = data.stats;
 
   /** @type {SymbolBean[]} */
   let beans = $state([]);
@@ -31,28 +29,6 @@
   ]);
   let sortColumn = $state("");
   let sortClass = $state("table-column-sort-asc");
-
-  async function fetchData() {
-    /** @type {Map<number,SymbolBean>} */
-    let beanIndexed = new Map()
-    alphabet = await Alphabet.download();
-    stats = await NotebookStatistics.download();
-    if (alphabet) {
-      beanIndexed = new Map(alphabet.items);
-    }
-    if (stats) {
-      stats.items.forEach((_,code) => {
-        if (!beanIndexed.has(code)){
-          beanIndexed.set(code, new SymbolBean(code));
-        }
-      });
-    }
-    beans = [...beanIndexed.values()];
-  }
-
-  async function saveDocument() {
-    alphabet?.upload();
-  }
 
   /** @param {string} col */
   function onSort(col) {
@@ -79,10 +55,19 @@
     }
   }
 
+  /** @type {Map<number,SymbolBean>} */
+  let beanIndexed = new Map()
+  beanIndexed = new Map(alphabet.items);
+  if (stats) {
+    stats.items.forEach((_,code) => {
+      if (!beanIndexed.has(code)){
+        beanIndexed.set(code, new SymbolBean(code));
+      }
+    });
+  }
+  beans = [...beanIndexed.values()];
+
   marked.use(markedTunic({}));
-  onMount(() => {
-    fetchData();
-  });
 
 </script>
 

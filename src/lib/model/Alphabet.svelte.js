@@ -1,7 +1,6 @@
 import { AbstractBean } from "$lib/model/AbstractBean.svelte.js";
 import { SymbolBean } from "$lib/model/SymbolBean.svelte.js";
 import fs from 'fs';
-import path from 'path';
 
 export class Alphabet extends AbstractBean {
 
@@ -12,13 +11,13 @@ export class Alphabet extends AbstractBean {
    * @type {Map<number, SymbolBean>}
    * @protected
    */
-  _items = $state(new Map());
+  _items = new Map();
 
   /**
    * @type {string}
    * @protected
    */
-  _fileName = $state("");
+  _fileName = "";
 
   constructor() {
     super();
@@ -118,8 +117,13 @@ export class Alphabet extends AbstractBean {
     });
   }
 
-  static async download () {
-    const response = await fetch(`/api/alphabet`);
+  /**
+   * @param {function(RequestInfo|URL): Promise<Response>=} fetchFn
+   */
+  static async download (fetchFn) {
+    const url = `/api/alphabet`;
+    const f = fetchFn ? fetchFn : fetch;
+    const response = await f(url);
     let document;
     if (response.ok) {
       let json = await response?.text();
@@ -128,8 +132,12 @@ export class Alphabet extends AbstractBean {
     return document;
   }
 
-  async upload() {
-    await fetch(`/api/alphabet`, {
+  /**
+   * @param {function(RequestInfo|URL): Promise<Response>=} fetchFn
+   */
+  async upload(fetchFn) {
+    const f = fetchFn ? fetchFn : fetch;
+    await f(`/api/alphabet`, {
       method: 'POST',
       headers: { 'Content-type': 'application/json'},
       body: JSON.stringify(this)

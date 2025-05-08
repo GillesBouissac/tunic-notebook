@@ -10,36 +10,11 @@
   import { Button } from "flowbite-svelte";
   import { NoteTooltip, ThumbNail } from "$lib/graphics/graphics.svelte";
 
-  /** @type {{imagefile:string, documentfile:string, documentcontent:string}[]} */
-  let documents = $state([]);
-
-  /** @type {Alphabet|undefined} */
-  let alphabet = $derived(undefined);
+  let { data } = $props();
+  let alphabet = data.alphabet;
+  let notebooks = data.notebooks;
 
   const activeDocument = page.url.searchParams.get('document');
-
-  async function fetchData() {
-    const answer = await fetch("/api/screenshots/list");
-    const imagenames = await answer.json();
-    for ( const imagefile of imagenames ) {
-      const basename = imagefile.replace(/\.[^/.]+$/, "");
-      const jsonfile = `${basename}.json`;
-      let document = await Notebook.download(jsonfile);
-      if (!document) {
-        document = Notebook.newDocument(jsonfile, imagefile);
-        await document.upload();
-      }
-      documents.push({
-        imagefile:imagefile,
-        documentfile:jsonfile,
-        documentcontent:document.text.length==0 ? "Use edit button to add notes" : document.text
-      });
-    }
-    if (!alphabet) {
-      alphabet = await Alphabet.download();
-      marked.use(markedTunic({ alphabet: alphabet?.items }));
-    }
-  }
 
   /**
    * Create an observer to detect visibility change of sections
@@ -48,7 +23,6 @@
   function onSectionCreated(node) {
     if (activeDocument) {
       let element = document.getElementById(activeDocument);
-      // console.log("scrolling view to ", element);
       if (element) {
         element.scrollIntoView({block:"center"});
       }
@@ -75,22 +49,20 @@
     }
   }
 
-  onMount(() => {
-    fetchData();
-  });
+  marked.use(markedTunic({ alphabet: alphabet?.items }));
 </script>
 
 {#if alphabet}
 <div class="grid grid-cols-1 gap-4 mx-auto">
-	{#each documents as document}
-    <div id="{document.imagefile}" use:onSectionCreated class="grid grid-cols-4 gap-4 mx-auto">
+	{#each notebooks as notebook}
+    <div id="{notebook.imagefile}" use:onSectionCreated class="grid grid-cols-4 gap-4 mx-auto">
       <div class="flex items-center thumbnail-container rounded-lg">
-        <div class="m-3"><ThumbNail imageName={document.imagefile} {navigateFrom}></ThumbNail></div>
+        <div class="m-3"><ThumbNail imageName={notebook.imagefile} {navigateFrom}></ThumbNail></div>
       </div>
       <div class="relative marked-local col-span-3 rounded-lg">
-        <div class="marked-styles m-3">{@html marked(document.documentcontent)}</div>
+        <div class="marked-styles m-3">{@html marked(notebook.documentcontent)}</div>
         <div class="button-box">
-          <Button shadow class="px-4" color="blue" onclick={navigateTo(document.imagefile, document.documentfile)}>
+          <Button shadow class="px-4" color="blue" onclick={navigateTo(notebook.imagefile, notebook.documentfile)}>
             <Fa icon={faPencil} /><span>&nbsp;Edit</span>
           </Button>
           <NoteTooltip placement="left">Edit the note in note editor</NoteTooltip>

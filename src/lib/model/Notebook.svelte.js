@@ -149,9 +149,14 @@ export class Notebook {
     return newObj;
   }
 
-  /** @param {string} fileName */
-  static async download (fileName) {
-    const response = await fetch(`/api/documents/${fileName}`);
+  /**
+   * @param {string} fileName
+   * @param {function(RequestInfo|URL): Promise<Response>=} fetchFn
+   */
+  static async download (fileName, fetchFn) {
+    const url = `/api/documents/${fileName}`;
+    const f = fetchFn ? fetchFn : fetch;
+    const response = await f(url);
     let document = null;
     if (response.ok) {
       let json = await response?.text();
@@ -161,8 +166,13 @@ export class Notebook {
     return document;
   }
 
-  async upload() {
-    await fetch(`/api/documents/${this.fileName}`, {
+  /**
+   * @param {function(RequestInfo|URL): Promise<Response>=} fetchFn
+   */
+  async upload(fetchFn) {
+    const url = `/api/documents/${this.fileName}`;
+    const f = fetchFn ? fetchFn : fetch;
+    await f(url, {
       method: 'POST',
       headers: { 'Content-type': 'application/json'},
       body: JSON.stringify(this)

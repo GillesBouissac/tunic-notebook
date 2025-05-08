@@ -60,7 +60,7 @@ function renderCircle(code: number, segment: SymbolPart, opacity: string): strin
 }
 
 function renderHeader(code: number, meaning: string|undefined): string {
-    const stylePretty = `
+    const _style = `
         display:inline-block;
         vertical-align:middle;
         height:calc(var(--icon-size,2rem)*1);
@@ -68,21 +68,30 @@ function renderHeader(code: number, meaning: string|undefined): string {
         stroke-width:2;
         stroke-linecap: round;
     `;
-    const style = stylePretty.replaceAll(/\n/g, "").replaceAll(/[ ]/g, "")
+    const style = _style.replaceAll(/\n/g, "").replaceAll(/[ ]/g, "")
+    let result = `<a href='/symbol/0x${code.toString(16).toUpperCase()}' >`;
     if (meaning && meaning != "") {
-        return `<span style="color:var(--decoded-color, blue)">${meaning}`;
+        result += `<span style="color:var(--decoded-color, blue)">${meaning}`;
     }
-    return `<svg viewBox="-1 -4 22 44" style="${style}">
+    else {
+        result += `<svg viewBox="-1 -4 22 44" style="${style}">
         <g>
     `;
+    }
+    return result;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function renderFooter(code: number, meaning: string|undefined): string {
+    let result = "";
     if (meaning && meaning != "") {
-        return `</span>`;
+        result += `</span>`;
     }
-    return `</g></svg>`;
+    else {
+        result += `</g></svg>`;
+    }
+    result += "</a>"
+    return result;
 }
 
 /**

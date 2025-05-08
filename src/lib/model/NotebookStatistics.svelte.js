@@ -167,8 +167,12 @@ export class NotebookStatistics {
     return newObj;
   }
 
-  static async download () {
-    const response = await fetch(`/api/statistics/alphabet/`);
+  /**
+   * @param {function(RequestInfo|URL): Promise<Response>=} fetchFn
+   */
+  static async download (fetchFn) {
+    const url = `/api/statistics/`;
+    const response = await (fetchFn ? fetchFn(url) : fetch(url));
     let newObj = new NotebookStatistics();
     if (response.ok) {
       let json = await response?.text();
