@@ -1,9 +1,10 @@
 <script>
   import { page } from '$app/state';
-  import { marked } from 'marked';
-  import { markedTunic } from '$lib/marked/marked-tunic.svelte.js';
+  import { Marked } from 'marked';
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
-  import { SymbolBean } from '$lib/model/SymbolBean.svelte.js';
+  import { markedTunic } from '$lib/marked/marked-tunic.svelte.js';
+  import { SymbolBean } from '$lib/model/model.svelte.js';
+  import { decodeSymbols } from '$lib/model/stores.svelte.js';
 
   let { data } = $props();
   let alphabet = data.alphabet;
@@ -57,14 +58,15 @@
     }
   }
 
-  marked.use(markedTunic({urls:false}));
+  let markedMain = new Marked(markedTunic({alphabet:undefined, urls: false, decode:{value:false}}));
+  let markedList = new Marked(markedTunic({alphabet:alphabet.items, decode:decodeSymbols}));
 </script>
 
 {#if bean}
 <div class="grid grid-cols-3">
   <div class="grid grid-cols-1">
     <div class="flex items-center justify-center symbol-big">
-      {@html marked(`tunic(${bean.code})`)}
+      {@html markedMain.parse(`tunic(${bean.code})`)}
     </div>
     <div class="px-5">
       <Table class="" border={false}>
@@ -95,12 +97,12 @@
     <Table hoverable={true} class="text-center table-90" border={false}>
       <TableHead class="sticky top-0">
         <TableHeadCell class={sortColumn==Column.word ? sortClass : "table-column-sort-none"} onclick={onSort(Column.word)}>Used in these words</TableHeadCell>
-        <TableHeadCell class={sortColumn==Column.count ? sortClass : "table-column-sort-none"} onclick={onSort(Column.count)}>Occurences of the words</TableHeadCell>
+        <TableHeadCell class={sortColumn==Column.count ? sortClass : "table-column-sort-none"} onclick={onSort(Column.count)}>Occurences of the word</TableHeadCell>
       </TableHead>
       <TableBody class="overflow-auto">
         {#each Object.keys(wordsRef) as word}
           <TableBodyRow>
-            <TableBodyCell>{@html marked(word)}</TableBodyCell>
+            <TableBodyCell>{@html markedList.parse(word)}</TableBodyCell>
             <TableBodyCell>{wordsRef[word]?.length}</TableBodyCell>
           </TableBodyRow>
         {/each}

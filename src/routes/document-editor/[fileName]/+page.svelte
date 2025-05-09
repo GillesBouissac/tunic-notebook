@@ -4,11 +4,12 @@
   import { page } from '$app/state';
   import { marked } from "marked";
   import { Button, Select, Toggle } from "flowbite-svelte";
-  import { SymbolBean } from "$lib/model/model.svelte";
+  import { decodeSymbols, SymbolBean } from "$lib/model/model.svelte";
   import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
   import { NoteTooltip } from '$lib/graphics/graphics.svelte';
+  /** @import { TunicOptions } from '$lib/marked/marked-tunic.svelte' */
 
   let { data } = $props();
   let alphabet = data.alphabet;
@@ -20,14 +21,11 @@
   /** @type {HTMLTextAreaElement|undefined} */
   let textarea = $state();
 
-  /** @type {boolean} */
-  let decodeSymbols = $state(true);
-
   /** @type {{name:string, value: number}[]}} */
   let selectBean =$state([]);
 
-  /** @type {{alphabet:Map<number,SymbolBean>}}*/
-  let markedOptions = $state({alphabet: new Map()});
+  /** @type {TunicOptions}*/
+  let markedOptions = {alphabet: alphabet.items, decode:decodeSymbols};
 
   /** @type {SymbolBean} */
   let sandboxBean = new SymbolBean(0xFFFF);
@@ -42,12 +40,6 @@
 
   $effect(() => {
     saveDocument(notebook?.text)
-  });
-
-  $effect(() => {
-    if (alphabet) {
-      markedOptions.alphabet = decodeSymbols ? alphabet.items : new Map();
-    }
   });
 
   /** @param {string | undefined} text */
@@ -119,12 +111,8 @@
       <textarea bind:this={textarea} class="text-box border-0" bind:value={notebook.text} onkeydown={handleKeyDown}></textarea>
     </div>
   </div>
-  <div class="relative">
+  <div>
     <div class="marked-styles marked-box overflow-auto m-2">{@html marked(notebook.text)}</div>
-    <div class="toggle-box">
-      <Toggle class="px-4" color="blue" bind:checked={decodeSymbols}><Fa icon={faKey} /></Toggle>
-      <NoteTooltip placement="bottom">{decodeSymbols ? "Symbol decoding active" : "Symbol decoding inactive"}</NoteTooltip>
-    </div>
   </div>
 </div>
 
@@ -144,10 +132,5 @@
   }
   :global(.marked-box) {
     max-height: 90dvh;
-  }
-  .toggle-box {
-      position: absolute;
-      top: 20px;
-      right: 20px;
   }
 </style>

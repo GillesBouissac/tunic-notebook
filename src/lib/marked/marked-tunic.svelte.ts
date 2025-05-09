@@ -8,6 +8,7 @@ export const SYMBOL_WORD_PATTERN = /(tunic\s*\(\s*(0x[a-z0-9]+|[0-9]+)\s*\))+/gi
 
 export type TunicOptions = {
     alphabet?: Map<number,SymbolBean>;
+	decode?: {value:boolean};
 	urls?: boolean;
 }
 
@@ -34,6 +35,9 @@ export function markedTunic (options: TunicOptions) {
  * @returns The extension
  */
 function tunicSymbolFromCode(options: TunicOptions) {
+	if (options.decode===undefined) {
+		options.decode = {value:true};
+	}
 	return {
 		name: 'tunicSymbolCode',
 		level: 'inline',
@@ -52,7 +56,7 @@ function tunicSymbolFromCode(options: TunicOptions) {
 		},
         renderer(token: Tokens.Generic) {
 			const bean = options?.alphabet?.get(token.code);
-            return renderSymbol(token.code, bean?.meaning, token.spaces, options.urls);
+            return renderSymbol(token.code, options.decode?.value ? bean?.meaning : undefined, token.spaces, options.urls);
         }
 	};
 }

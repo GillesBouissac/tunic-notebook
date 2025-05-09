@@ -6,7 +6,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
-  import { Notebook, Alphabet } from "$lib/model/model.svelte";
+  import { Notebook, Alphabet, decodeSymbols } from "$lib/model/model.svelte";
   import { Button } from "flowbite-svelte";
   import { NoteTooltip, ThumbNail } from "$lib/graphics/graphics.svelte";
 
@@ -49,7 +49,7 @@
     }
   }
 
-  marked.use(markedTunic({ alphabet: alphabet?.items }));
+  marked.use(markedTunic({ alphabet: alphabet.items, decode:decodeSymbols }));
 </script>
 
 {#if alphabet}

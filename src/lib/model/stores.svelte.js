@@ -7,6 +7,12 @@ import { Alphabet } from './Alphabet.svelte';
 let alphabet = $derived(new Alphabet());
 
 /**
+ * Global activation of symbol decoding in UI
+ * @type {{value:boolean}}
+ */
+export let decodeSymbols = $state({value:true});
+
+/**
  * Fetch the store from server if not already done
  * @param {function(RequestInfo|URL): Promise<Response>} fetchFn
  */
