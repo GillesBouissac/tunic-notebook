@@ -51,15 +51,19 @@ function isBitSet(value: number, bit: number): boolean {
     return (bit==0) || (value & bit) != 0;
 }
 
-function renderSegment(code: number, segment: SymbolPart, opacity: string, urls:boolean): string {
-    return `<path d="M ${segment.x1},${segment.y1} ${segment.x2},${segment.y2}" style="stroke:rgb(0,0,0);opacity:${opacity}" />`;
+function svgColor(highlight:boolean) {
+    return highlight ? "rgb(255, 195, 0)" : "rgb(0,0,0)";
 }
 
-function renderCircle(code: number, segment: SymbolPart, opacity: string, urls:boolean): string {
-    return `<circle cx="${segment.x1}" cy="${segment.y1}" r="${segment.r}" style="fill:none;stroke:rgb(0,0,0);opacity:${opacity}" />`;
+function renderSegment(code: number, segment: SymbolPart, opacity: string, urls:boolean, highlight:boolean): string {
+    return `<path d="M ${segment.x1},${segment.y1} ${segment.x2},${segment.y2}" style="stroke:${svgColor(highlight)};opacity:${opacity}" />`;
 }
 
-function renderHeader(code: number, meaning: string|undefined, urls:boolean): string {
+function renderCircle(code: number, segment: SymbolPart, opacity: string, urls:boolean, highlight:boolean): string {
+    return `<circle cx="${segment.x1}" cy="${segment.y1}" r="${segment.r}" style="fill:none;stroke:${svgColor(highlight)};opacity:${opacity}" />`;
+}
+
+function renderHeader(code: number, meaning: string|undefined, urls:boolean, highlight:boolean): string {
     const _style = `
         display:inline-block;
         vertical-align:middle;
@@ -85,7 +89,7 @@ function renderHeader(code: number, meaning: string|undefined, urls:boolean): st
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function renderFooter(code: number, meaning: string|undefined, urls:boolean, spaces:string): string {
+function renderFooter(code: number, meaning: string|undefined, urls:boolean, highlight:boolean, spaces:string): string {
     let result = "";
     if (meaning && meaning != "") {
         result += `${spaces}</span>`;
@@ -102,20 +106,21 @@ function renderFooter(code: number, meaning: string|undefined, urls:boolean, spa
 /**
  * Generates the HTML string for a single Tunic symbol
  */
-export function renderSymbol(code:number, meaning:string|undefined, spaces:number, urls?:boolean) {
+export function renderSymbol(code:number, meaning:string|undefined, spaces:number, urls?:boolean, highlight?:boolean) {
     let svg = "";
     let wantUrls = urls === undefined ? true : urls;
+    let wantHighlight = highlight === undefined ? false : highlight;
 
-    svg += renderHeader(code, meaning, wantUrls);
+    svg += renderHeader(code, meaning, wantUrls, wantHighlight);
     for ( const part of SYMBOL_PARTS ) {
         if (part.shape==Shape.segment) {
-            svg += renderSegment(code, part, isBitSet(code, part.code) ? "100%" : "0%", wantUrls);
+            svg += renderSegment(code, part, isBitSet(code, part.code) ? "100%" : "0%", wantUrls, wantHighlight);
         }
         if (part.shape==Shape.circle) {
-            svg += renderCircle(code, part, isBitSet(code, part.code) ? "100%" : "0%", wantUrls);
+            svg += renderCircle(code, part, isBitSet(code, part.code) ? "100%" : "0%", wantUrls, wantHighlight);
         }
     }
-    svg += renderFooter(code, meaning, wantUrls, "&nbsp;".repeat(spaces));
+    svg += renderFooter(code, meaning, wantUrls, wantHighlight, "&nbsp;".repeat(spaces));
 
     return svg;
 }

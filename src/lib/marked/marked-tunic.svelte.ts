@@ -10,6 +10,7 @@ export type TunicOptions = {
     alphabet?: Map<number,SymbolBean>;
 	decode?: {value:boolean};
 	urls?: boolean;
+	highlight?: {code:number};
 }
 
 const TAB_SIZE = 2;
@@ -56,7 +57,7 @@ function tunicSymbolFromCode(options: TunicOptions) {
 		},
         renderer(token: Tokens.Generic) {
 			const bean = options?.alphabet?.get(token.code);
-            return renderSymbol(token.code, options.decode?.value ? bean?.meaning : undefined, token.spaces, options.urls);
+            return renderSymbol(token.code, options.decode?.value ? bean?.meaning : undefined, token.spaces, options.urls, token.code==options.highlight?.code);
         }
 	};
 }

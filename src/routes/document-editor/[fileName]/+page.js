@@ -9,5 +9,5 @@ export async function load ({ params, fetch }) {
 	let documentName = params.fileName;
 	const notebook = await Notebook.download(documentName, fetch);
 
-	return { alphabet: await loadAlphabet(fetch), notebook: notebook };
+	return { alphabet: await loadAlphabet(fetch), notebook: notebook, document:documentName };
 };

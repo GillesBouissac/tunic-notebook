@@ -1,7 +1,6 @@
 <script>
   import Fa from 'svelte-fa';
   import { faBatteryEmpty, faBatteryFull, faFileArrowDown, faKey, faRepeat } from '@fortawesome/free-solid-svg-icons';
-  import { page } from '$app/state';
   import { marked } from "marked";
   import { Button, Select, Toggle } from "flowbite-svelte";
   import { decodeSymbols, SymbolBean } from "$lib/model/model.svelte";
@@ -13,10 +12,8 @@
 
   let { data } = $props();
   let alphabet = data.alphabet;
-  let notebook = data.notebook;
-
-  /** @type {string|null} */
-  let documentName = page.params.fileName;
+  let notebook = $derived(data.notebook);
+  let documentName = $derived(data.document);
 
   /** @type {HTMLTextAreaElement|undefined} */
   let textarea = $state();
@@ -88,15 +85,15 @@
       <NoteTooltip placement="bottom">Use this tool to reproduce a symbol you see in the image</NoteTooltip>
       <div class="button-bo grid grid-cols-1 p-4">
         <Select class="text-center" placeholder="Alphabet ..." items={selectBean} bind:value={sandboxBean.code}></Select>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=0x0000}>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=0x0000}}>
           <Fa icon={faBatteryEmpty} /><span>&nbsp;Empty</span>
         </Button>
         <NoteTooltip placement="right">Empties all the segments</NoteTooltip>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=0xFFFF}>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=0xFFFF}}>
           <Fa icon={faBatteryFull} /><span>&nbsp;Full</span>
         </Button>
         <NoteTooltip placement="right">Fills all the segments</NoteTooltip>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => sandboxBean.code=~sandboxBean.code}>
+        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=~sandboxBean.code}}>
           <Fa icon={faRepeat} /><span>&nbsp;Invert</span>
         </Button>
         <NoteTooltip placement="right">Invert every segment</NoteTooltip>

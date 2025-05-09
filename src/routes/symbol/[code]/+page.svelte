@@ -1,22 +1,20 @@
-<script>
-  import { page } from '$app/state';
+<script lang="ts">
   import { Marked } from 'marked';
-  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
+  import { Table, TableBody, TableBodyCell, TableBodyRow } from 'flowbite-svelte';
   import { markedTunic } from '$lib/marked/marked-tunic.svelte.js';
   import { SymbolBean } from '$lib/model/model.svelte.js';
   import { decodeSymbols } from '$lib/model/stores.svelte.js';
+  import { SortableHead, SortableHeadCell } from '$lib/graphics/graphics.svelte.js';
 
   let { data } = $props();
   let alphabet = data.alphabet;
   let stats = data.stats;
+  let code = $derived(parseInt(data.code));
 
-  /** @type {number} */
-  let code = parseInt(page.params.code);
-  let knownBean = alphabet?.items.get(code);
-  let bean = $state(knownBean ? knownBean : new SymbolBean(code));
+  let knownBean = $derived(alphabet?.items.get(code));
+  let bean = $derived(knownBean ? knownBean : new SymbolBean(code));
 
-  /** @param {SymbolBean} bean */
-  function onMeaningChanged(bean) {
+  function onMeaningChanged(bean: SymbolBean) {
     return async () => {
       if (bean.meaning == "") {
         await alphabet.deletePersistent(bean);
@@ -27,39 +25,40 @@
     }
   }
 
-  let _wordsRef = stats.wordsRef(bean.code);
-  let _filesRef = stats.filesRef(bean.code);
-  let wordsRef = _wordsRef ? _wordsRef : {};
-  let filesRef = _filesRef ? _filesRef : {};
+  let _wordsRef = $derived(stats.wordsRef(bean.code));
+  let _filesRef = $derived(stats.filesRef(bean.code));
+  let wordsRef = $derived(_wordsRef ? _wordsRef : {});
+  let filesRef = $derived(_filesRef ? _filesRef : {});
 
-  const Column = {
-    word: "word",
-    count: "count",
-  }
-  /** @type {Map<string, function (string, string): number>} */
-  const sortfn = new Map([
-    [ "word", (a, b) => a.localeCompare(b) ],
-    // @ts-ignore
-    [ "count", (a, b) => wordsRef[a]?.length - wordsRef[b]?.length ],
-  ]);
-  let sortColumn = $state("");
-  let sortClass = $state("table-column-sort-asc");
+  type TableItem = {
+    word:string,
+    length:number,
+    count:number
+  };
 
-  /** @param {string} col */
-  function onSort(col) {
-    return () => {
-      sortColumn = col;
-      sortClass = sortClass=="table-column-sort-asc" ? "table-column-sort-dsc" : "table-column-sort-asc";
-      let sign = sortClass=="table-column-sort-asc" ? +1 : -1;
-      let cursortfn = sortfn.get(col);
-      if (cursortfn) {
-//        beans.sort((a,b) => sign * cursortfn(a,b));
+  let items: TableItem[] = $state([]);
+  $effect(() => {
+    items = Object.entries(wordsRef).map((e) => {
+      return {
+        word:e[0],
+        length:e[1] ? e[1][0].wordChars.length : 0,
+        count:e[1] ? e[1].length : 0
       }
-    }
+    });
+  });
+
+  function applySort(sortFn: any) {
+    items.sort(sortFn);
   }
 
+  let highlight = $derived({code:code});
   let markedMain = new Marked(markedTunic({alphabet:undefined, urls: false, decode:{value:false}}));
-  let markedList = new Marked(markedTunic({alphabet:alphabet.items, decode:decodeSymbols}));
+  let markedList: Marked = $state(new Marked());
+
+  $effect(() => {
+    markedList = new Marked(markedTunic({alphabet:alphabet.items, decode:decodeSymbols, highlight:highlight}));
+  });
+
 </script>
 
 {#if bean}
@@ -95,19 +94,23 @@
   </div>
   <div class="col-span-2 grid grid-cols-1 px-5">
     <Table hoverable={true} class="text-center table-90" border={false}>
-      <TableHead class="sticky top-0">
-        <TableHeadCell class={sortColumn==Column.word ? sortClass : "table-column-sort-none"} onclick={onSort(Column.word)}>Used in these words</TableHeadCell>
-        <TableHeadCell class={sortColumn==Column.count ? sortClass : "table-column-sort-none"} onclick={onSort(Column.count)}>Occurences of the word</TableHeadCell>
-      </TableHead>
+      <SortableHead class="sticky top-0">
+        {#snippet headCells(currentSorted, direction)}
+          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.word.localeCompare(b.word)}>Words</SortableHeadCell>
+          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.length - b.length}>Word length</SortableHeadCell>
+          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.count - b.count}>Occurences</SortableHeadCell>
+        {/snippet}
+      </SortableHead>
       <TableBody class="overflow-auto">
-        {#each Object.keys(wordsRef) as word}
-          <TableBodyRow>
-            <TableBodyCell>{@html markedList.parse(word)}</TableBodyCell>
-            <TableBodyCell>{wordsRef[word]?.length}</TableBodyCell>
-          </TableBodyRow>
+        {#each items as item}
+        <TableBodyRow>
+          <TableBodyCell>{@html markedList.parse(item.word)}</TableBodyCell>
+          <TableBodyCell>{item.length}</TableBodyCell>
+          <TableBodyCell>{item.count}</TableBodyCell>
+        </TableBodyRow>
         {/each}
       </TableBody>
     </Table>
-</div>
+  </div>
 </div>
 {/if}

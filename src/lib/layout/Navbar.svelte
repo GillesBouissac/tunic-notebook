@@ -14,7 +14,7 @@
 	</NavBrand>
 	<div class="flex md:order-2">
 		<Toggle class="px-4" color="blue" bind:checked={decodeSymbols.value}><Fa class="text-white" icon={faKey} /></Toggle>
-		<NoteTooltip placement="bottom">{decodeSymbols.value ? "Symbol decoding active" : "Symbol decoding inactive"}</NoteTooltip>
+		<NoteTooltip placement="bottom">{decodeSymbols.value ? "Click to disable symbol decoding" : "Click to enable symbol decoding"}</NoteTooltip>
 	</div>
 	<NavUl>
 		<NavLi class="text-white" href="/gallery">Notebooks</NavLi>
