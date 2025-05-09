@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import { marked } from "marked";
   import { SymbolBean } from "$lib/model/model.svelte.js";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
@@ -24,8 +23,8 @@
     [ "symbol", (a, b) => a.code - b.code ],
     [ "code", (a, b) => a.code - b.code ],
     [ "meaning", (a, b) => a.meaning.localeCompare(b.meaning) ],
-    [ "wordcount", (a, b) => stats.wordsRef(a.code).length - stats.wordsRef(b.code).length ],
-    [ "filecount", (a, b) => stats.filesRef(a.code).length - stats.filesRef(b.code).length ],
+    [ "wordcount", (a, b) => Object.keys(stats.wordsRef(a.code)).length - Object.keys(stats.wordsRef(b.code)).length ],
+    [ "filecount", (a, b) => Object.keys(stats.filesRef(a.code)).length - Object.keys(stats.filesRef(b.code)).length ],
   ]);
   let sortColumn = $state("");
   let sortClass = $state("table-column-sort-asc");
@@ -47,10 +46,10 @@
   function onMeaningChanged(bean) {
     return async () => {
       if (bean.meaning == "") {
-        await alphabet?.deletePersistent(bean);
+        await alphabet.deletePersistent(bean);
       }
       else {
-        await alphabet?.addPersistent(bean);
+        await alphabet.addPersistent(bean);
       }
     }
   }
@@ -58,43 +57,39 @@
   /** @type {Map<number,SymbolBean>} */
   let beanIndexed = new Map()
   beanIndexed = new Map(alphabet.items);
-  if (stats) {
-    stats.items.forEach((_,code) => {
-      if (!beanIndexed.has(code)){
-        beanIndexed.set(code, new SymbolBean(code));
-      }
-    });
-  }
+  stats.items.forEach((_,code) => {
+    if (!beanIndexed.has(code)){
+      beanIndexed.set(code, new SymbolBean(code));
+    }
+  });
   beans = [...beanIndexed.values()];
 
   marked.use(markedTunic({}));
-
 </script>
 
-{#if alphabet}
-  <Table hoverable={true} class="text-center table-90">
-    <TableHead class="sticky top-0">
-      <TableHeadCell class={sortColumn==Column.symbol ? sortClass : "table-column-sort-none"} onclick={onSort(Column.symbol)}>Symbol</TableHeadCell>
-      <TableHeadCell class={sortColumn==Column.code ? sortClass : "table-column-sort-none"} onclick={onSort(Column.code)}>Code</TableHeadCell>
-      <TableHeadCell class={sortColumn==Column.meaning ? sortClass : "table-column-sort-none"} onclick={onSort(Column.meaning)}>Meaning</TableHeadCell>
-      <TableHeadCell class={sortColumn==Column.wordcount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.wordcount)}>Word count</TableHeadCell>
-      <TableHeadCell class={sortColumn==Column.filecount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.filecount)}>File count</TableHeadCell>
-    </TableHead>
-    <TableBody class="overflow-auto">
-      {#each beans as bean}
-        <TableBodyRow>
-          <TableBodyCell>{@html marked(`tunic(${bean.code})`)}</TableBodyCell>
-          <TableBodyCell>{bean.codeString}</TableBodyCell>
-          <TableBodyCell class="meaning">
-            <input class="w-100" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="?" />
-          </TableBodyCell>
-          {#if stats}
-            <TableBodyCell>{stats.wordsRef(bean.code).length}</TableBodyCell>
-            <TableBodyCell>{stats.filesRef(bean.code).length}</TableBodyCell>
-          {/if}
-        </TableBodyRow>
-      {/each}
-    </TableBody>  
-  </Table>
-{/if}
+<Table hoverable={true} class="text-center table-90">
+  <TableHead class="sticky top-0">
+    <TableHeadCell class={sortColumn==Column.symbol ? sortClass : "table-column-sort-none"} onclick={onSort(Column.symbol)}>Symbol</TableHeadCell>
+    <TableHeadCell class={sortColumn==Column.code ? sortClass : "table-column-sort-none"} onclick={onSort(Column.code)}>Code</TableHeadCell>
+    <TableHeadCell class={sortColumn==Column.meaning ? sortClass : "table-column-sort-none"} onclick={onSort(Column.meaning)}>Meaning</TableHeadCell>
+    <TableHeadCell class={sortColumn==Column.wordcount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.wordcount)}>Word count</TableHeadCell>
+    <TableHeadCell class={sortColumn==Column.filecount ? sortClass : "table-column-sort-none"} onclick={onSort(Column.filecount)}>File count</TableHeadCell>
+  </TableHead>
+  <TableBody class="overflow-auto">
+    {#each beans as bean}
+      <TableBodyRow>
+        <TableBodyCell>{@html marked(`tunic(${bean.code})`)}</TableBodyCell>
+        <TableBodyCell>{bean.codeString}</TableBodyCell>
+        <TableBodyCell class="meaning">
+          <input class="w-100 text-fuchsia-600 placeholder-fuchsia-200" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="Give it to me ..." />
+        </TableBodyCell>
+        {#if stats}
+          <TableBodyCell>{Object.keys(stats.wordsRef(bean.code)).length}</TableBodyCell>
+          <TableBodyCell>{Object.keys(stats.filesRef(bean.code)).length}</TableBodyCell>
+        {/if}
+      </TableBodyRow>
+    {/each}
+  </TableBody>  
+</Table>
+
 

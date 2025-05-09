@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import { marked } from "marked";
   import { Button, Select, Toggle } from "flowbite-svelte";
-  import { Notebook, SymbolBean } from "$lib/model/model.svelte";
+  import { SymbolBean } from "$lib/model/model.svelte";
   import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
@@ -12,7 +12,7 @@
 
   let { data } = $props();
   let alphabet = data.alphabet;
-  let textdoc = data.text;
+  let notebook = data.notebook;
 
   /** @type {string|null} */
   let documentName = page.params.fileName;
@@ -41,7 +41,7 @@
   });
 
   $effect(() => {
-    saveDocument(textdoc?.text)
+    saveDocument(notebook?.text)
   });
 
   $effect(() => {
@@ -52,7 +52,7 @@
 
   /** @param {string | undefined} text */
   function saveDocument(text) {
-    textdoc?.upload();
+    notebook?.upload();
   }
 
   /**
@@ -81,13 +81,13 @@
   marked.use(markedTunic(markedOptions));
 </script>
 
-{#if textdoc && alphabet}
+{#if notebook && alphabet}
 <div class="grid grid-cols-2 w-full">
 
   <div class="m-2 h-full">
     <div class="grid grid-cols-6 w-full m-2">
       <div class="mx-auto w-full col-span-3">
-        <ImagePanZoom imageName={textdoc.image}></ImagePanZoom>
+        <ImagePanZoom imageName={notebook.image}></ImagePanZoom>
         <NoteTooltip placement="bottom">You can pan and zoom this image to focus on symbols</NoteTooltip>
       </div>
       <div class="flex items-center justify-center h-full col-span-2">
@@ -116,13 +116,11 @@
     </div>
 
     <div>
-      <textarea bind:this={textarea} class="text-box border-0" bind:value={textdoc.text} onkeydown={handleKeyDown}></textarea>
+      <textarea bind:this={textarea} class="text-box border-0" bind:value={notebook.text} onkeydown={handleKeyDown}></textarea>
     </div>
   </div>
   <div class="relative">
-    <div class="marked-styles marked-box overflow-auto m-2">
-      {@html marked(textdoc.text)}
-    </div>
+    <div class="marked-styles marked-box overflow-auto m-2">{@html marked(notebook.text)}</div>
     <div class="toggle-box">
       <Toggle class="px-4" color="blue" bind:checked={decodeSymbols}><Fa icon={faKey} /></Toggle>
       <NoteTooltip placement="bottom">{decodeSymbols ? "Symbol decoding active" : "Symbol decoding inactive"}</NoteTooltip>

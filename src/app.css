@@ -13,6 +13,11 @@
     --decoded-color: rgb(238, 43, 205);
 }
 
+.symbol-big {
+    --icon-size: 30rem;
+    height: 50dvh;
+}
+
 .meaning {
     color:var(--decoded-color, blue)
 }

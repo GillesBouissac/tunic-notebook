@@ -3,7 +3,9 @@ import { SymbolBean } from "./SymbolBean.svelte";
 import { SYMBOL_PATTERN_GLOBAL } from "$lib/marked/marked-tunic.svelte";
 
 /** Context of a token in a document */
-export class TokenLocation {
+export class TokenContext {
+  /** @type {number} */
+  code = 0;
   /** @type {string} */
   fileName = "";
   /** @type {string} */
@@ -26,6 +28,7 @@ export class TokenLocation {
         return symbol.code;
       });
     }
+    this._word = this._wordChars.map((e)=>`tunic(0x${e.toString(16).toUpperCase()})`).join("");
   }
 
   get word() {
@@ -38,6 +41,7 @@ export class TokenLocation {
 
   toJSON() {
     let jsonObj = {
+      code:this.code,
       fileName: this.fileName,
       token:this.token,
       tokenStart:this.tokenStart,
@@ -49,7 +53,8 @@ export class TokenLocation {
 
   /** @param {any} jsonObj */
   static fromJSON(jsonObj) {
-    let newObj = new TokenLocation();
+    let newObj = new TokenContext();
+    newObj.code = jsonObj['code'];
     newObj.fileName = jsonObj['fileName'];
     newObj.token = jsonObj['token'];
     newObj.tokenStart = jsonObj['tokenStart'];
@@ -59,11 +64,11 @@ export class TokenLocation {
   }
 }
 
-export class NotebookStatistics {
+export class Statistics {
 
   /**
    * Image linked to this document
-   * @type {Map<number, Map<string, TokenLocation[]>>}
+   * @type {Map<number, TokenContext[]>}
    * @private
    */
   _items = new Map();
@@ -75,70 +80,50 @@ export class NotebookStatistics {
   /**
    * 
    * @param {SymbolBean} bean 
-   * @param {TokenLocation} context 
+   * @param {TokenContext} context 
    */
   add(bean, context) {
     context.fileName = path.basename(context.fileName);
     if (!this._items.has(bean.code)) {
-      this._items.set(bean.code, new Map());
+      this._items.set(bean.code, []);
     }
-    let fileContext = this._items.get(bean.code);
-    if (!fileContext?.has(context.fileName)) {
-      fileContext?.set(context.fileName, []);
-    }
-    let contextList = fileContext?.get(context.fileName);
+    let contextList = this._items.get(bean.code);
     contextList?.push(context);
   }
 
   /**
    * @param {number} code
+   * @return {Partial<Record<string, TokenContext[]>>}
    */
   filesRef(code) {
-    let fileMap = this.items.get(code)
-    if (fileMap) {
-      return [...fileMap.keys()];
+    let contexts = this.items.get(code)
+    /** @type {Partial<Record<string, TokenContext[]>>} */
+    let result = {};
+    if (contexts) {
+      result = Object.groupBy(contexts, (context) => context.fileName);
     }
-    return [];
+    return result;
   }
 
   /**
    * @param {number} code
-   * @returns {TokenLocation[]}
+   * @return {Partial<Record<string, TokenContext[]>>}
    */
   wordsRef(code) {
-    /** @type {TokenLocation[]} */
-    let tokenRefs = [];
-    this.items.get(code)?.forEach((v,_) => tokenRefs.push(...v));
-    return tokenRefs;
-  }
-
-  /**
-   * @param {Map<string, TokenLocation[]>} fileMap
-   * @private
-   */
-  fileMapToJSON(fileMap) {
-    return [...fileMap.entries()].map(([k,v]) => {
-      return [k, v.map(tl => tl.toJSON())]
-    })
+    let contexts = this.items.get(code)
+    /** @type {Partial<Record<string, TokenContext[]>>} */
+    let result = {};
+    if (contexts) {
+      result = Object.groupBy(contexts, (context) => context.word);
+    }
+    return result;
   }
 
   /** @private */
   itemsMapToJSON() {
     return [...this._items.entries()].map(([k,v]) => {
-      return [k, this.fileMapToJSON(v)]
+      return [k, v.map(tl => tl.toJSON())]
     })
-  }
-
-  /**
-   * @param {any[]} jsonObj 
-   * @private
-   */
-  static fileMapFromJSON(jsonObj) {
-    let map = new Map();
-    jsonObj.forEach(entry => {
-      map.set(entry[0], entry[1].map((/** @type {any} */ e) => TokenLocation.fromJSON(e)));
-    });
-    return map;
   }
 
   /**
@@ -148,7 +133,7 @@ export class NotebookStatistics {
   static itemsMapFromJSON(jsonObj) {
     let map = new Map();
     jsonObj.forEach(entry => {
-      map.set(entry[0], this.fileMapFromJSON(entry[1]));
+      map.set(entry[0], entry[1].map((/** @type {any} */ e) => TokenContext.fromJSON(e)));
     });
     return map;
   }
@@ -162,8 +147,8 @@ export class NotebookStatistics {
 
   /** @param {any} jsonObj */
   static fromJSON(jsonObj) {
-    let newObj = new NotebookStatistics();
-    newObj._items = NotebookStatistics.itemsMapFromJSON(jsonObj["items"]);
+    let newObj = new Statistics();
+    newObj._items = Statistics.itemsMapFromJSON(jsonObj["items"]);
     return newObj;
   }
 
@@ -172,11 +157,12 @@ export class NotebookStatistics {
    */
   static async download (fetchFn) {
     const url = `/api/statistics/`;
-    const response = await (fetchFn ? fetchFn(url) : fetch(url));
-    let newObj = new NotebookStatistics();
+    const f = fetchFn ? fetchFn : fetch;
+    const response = await f(url);
+    let newObj = new Statistics();
     if (response.ok) {
       let json = await response?.text();
-      newObj = NotebookStatistics.fromJSON(JSON.parse(json));
+      newObj = Statistics.fromJSON(JSON.parse(json));
     }
     return newObj;
   }

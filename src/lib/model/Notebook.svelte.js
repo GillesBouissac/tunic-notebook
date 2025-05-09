@@ -105,7 +105,6 @@ export class Notebook {
       document = Notebook.parseJSON(jsonText);
     }
     catch (err) {
-      // console.log(`Error reading file ${filePath}: ${err}`);
       return null;
     }
     return document;

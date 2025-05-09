@@ -11,7 +11,6 @@
 	<NavUl>
 		<NavLi class="text-white" href="/gallery">Notes</NavLi>
 		<NavLi class="text-white" href="/alphabet">Alphabet</NavLi>
-		<NavLi class="text-white" href="/symbol">Symbol</NavLi>
 	</NavUl>
 </Navbar>
 </header>
