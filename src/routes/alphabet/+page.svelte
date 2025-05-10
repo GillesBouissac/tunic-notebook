@@ -31,21 +31,17 @@
   });
   beans = [...beanIndexed.values()];
 
-  function applySort(sortFn: any) {
-    beans.sort(sortFn);
-  }
-
   marked.use(markedTunic({}));
 </script>
 
 <Table hoverable={true} class="text-center table-90">
-  <SortableHead class="sticky top-0">
-    {#snippet headCells(currentSorted, direction)}
-      <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.code - b.code}>Symbol</SortableHeadCell>
-      <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.code - b.code}>Code</SortableHeadCell>
-      <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.meaning.localeCompare(b.meaning)}>Meaning</SortableHeadCell>
-      <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => Object.keys(stats.wordsRef(a.code)).length - Object.keys(stats.wordsRef(b.code)).length}>Word count</SortableHeadCell>
-      <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => Object.keys(stats.filesRef(a.code)).length - Object.keys(stats.filesRef(b.code)).length}>File count</SortableHeadCell>
+  <SortableHead class="sticky top-0" applySort={(itemCmp) => beans.sort(itemCmp)}>
+    {#snippet sortableHeadCells(sortContext)}
+      <SortableHeadCell {sortContext} sort={(a,b) => a.code - b.code}>Symbol</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.code - b.code}>Code</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.meaning.localeCompare(b.meaning)}>Meaning</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => Object.keys(stats.wordsRef(a.code)).length - Object.keys(stats.wordsRef(b.code)).length}>Word count</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => Object.keys(stats.filesRef(a.code)).length - Object.keys(stats.filesRef(b.code)).length}>File count</SortableHeadCell>
     {/snippet}
   </SortableHead>
   <TableBody class="overflow-auto">

@@ -4,20 +4,24 @@
  -->
 <script lang="ts">
   import { getContext, type Snippet } from "svelte";
-  import { TableHeadCell, tablehead } from "flowbite-svelte";
+  import { tablehead } from "flowbite-svelte";
   import type { TableHeadProps, TableCtxType, HeadItemType, } from "flowbite-svelte";
   import clsx from "clsx";
   import SortableHeadCell from "./SortableHeadCell.svelte";
 
-  export type CurrentSorted = {
-    node:HTMLTableCellElement|undefined,
-    set:(value:HTMLTableCellElement) => void
+  export type TableSortFunc = (a:any, b:any) => number;
+
+  export type TableSortContext = {
+    applySort?: (itemCmp:TableSortFunc) => void,
+    setSortedColumn: (value:HTMLTableCellElement) => void,
+    currentSortedColumn: HTMLTableCellElement|undefined
   };
 
   let {
     children,
     headerSlot,
-    headCells,
+    sortableHeadCells,
+    applySort,
     color,
     striped,
     border,
@@ -25,15 +29,21 @@
     headItems,
     defaultRow = true,
     ...restProps
-  }: TableHeadProps & { headCells?: Snippet<[currentSorted:CurrentSorted, direction:"asc" | "desc"]> } = $props();
+  }: TableHeadProps & {
+    applySort?: (itemCmp:TableSortFunc) => void,
+    sortableHeadCells?: Snippet<[TableSortContext]>
+  } = $props();
 
   const tableCtx = getContext<TableCtxType>("tableCtx");
   // for reactivity with svelte context
   let compoColor = $derived(color ? color : tableCtx.color || "default");
   let compoStriped = $derived(striped ? striped : tableCtx.striped || false);
   let compoBorder = $derived(border ? border : tableCtx.border || false);
-  let currentSorted: CurrentSorted = $state({node:undefined, set:(node) => currentSorted.node = node});
-  let sortDir:"asc" | "desc" = $state("asc");
+  let sortContext:TableSortContext = $state({
+    applySort:applySort,
+    setSortedColumn:(column) => sortContext.currentSortedColumn = column,
+    currentSortedColumn:undefined
+  });
 
   const base = $derived(
     tablehead({
@@ -64,13 +74,13 @@
         </SortableHeadCell>
       {/each}
     </tr>
-  {:else if headCells}
+  {:else if sortableHeadCells}
     {#if defaultRow}
       <tr>
-        {@render headCells(currentSorted, sortDir)}
+        {@render sortableHeadCells(sortContext)}
       </tr>
     {:else}
-      {@render headCells(currentSorted, sortDir)}
+      {@render sortableHeadCells(sortContext)}
     {/if}
   {/if}
 </thead>

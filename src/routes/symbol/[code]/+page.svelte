@@ -94,11 +94,11 @@
   </div>
   <div class="col-span-2 grid grid-cols-1 px-5">
     <Table hoverable={true} class="text-center table-90" border={false}>
-      <SortableHead class="sticky top-0">
-        {#snippet headCells(currentSorted, direction)}
-          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.word.localeCompare(b.word)}>Words</SortableHeadCell>
-          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.length - b.length}>Word length</SortableHeadCell>
-          <SortableHeadCell {applySort} {currentSorted} {direction} sort={(a,b) => a.count - b.count}>Occurences</SortableHeadCell>
+      <SortableHead class="sticky top-0" applySort={(itemCmp) => items.sort(itemCmp)}>
+        {#snippet sortableHeadCells(sortContext)}
+          <SortableHeadCell {sortContext} sort={(a,b) => a.word.localeCompare(b.word)}>Words</SortableHeadCell>
+          <SortableHeadCell {sortContext} sort={(a,b) => a.length - b.length}>Word length</SortableHeadCell>
+          <SortableHeadCell {sortContext} sort={(a,b) => a.count - b.count}>Occurences</SortableHeadCell>
         {/snippet}
       </SortableHead>
       <TableBody class="overflow-auto">

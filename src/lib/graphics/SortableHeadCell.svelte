@@ -6,36 +6,33 @@
     import clsx from "clsx";
     import { tableheadcell } from "flowbite-svelte";
     import type { TableHeadCellProps } from "flowbite-svelte";
-  import type { CurrentSorted } from "./SortableHead.svelte";
+    import type { TableSortContext } from "./SortableHead.svelte";
 
     let {
-        applySort,
+        sortContext,
         children,
         class: className,
-        currentSorted,
         sort: sortFn,
-        direction,
         ...restProps
     }: TableHeadCellProps & {
-        applySort?: (sortFn:(a:any, b:any) => void) => void,
-        sort?: (a:any, b:any) => void,
-        currentSorted?:CurrentSorted, direction?:"asc" | "desc"
+        sortContext?: TableSortContext,
     } = $props();
     const base = $derived(tableheadcell({ class: clsx(className) }));
 
+    let direction: "asc" | "desc" = $state("asc");
     let sortClass = $state(" table-column-sort-none");
     let thisHeader: HTMLTableCellElement|undefined = $state(undefined);
     function onclick(_:MouseEvent & { currentTarget: EventTarget & HTMLTableCellElement; }) {
-        if (currentSorted && thisHeader) currentSorted.set(thisHeader);
+        if (sortContext && thisHeader) sortContext.setSortedColumn(thisHeader);
         direction = direction=="asc" ? "desc" : "asc";
         let sign = direction=="asc" ? +1 : -1;
-        if (applySort && sortFn) {
-            applySort((a,b) => sign * sortFn(a,b));
+        if (sortContext?.applySort && sortFn) {
+            sortContext.applySort((a,b) => sign * sortFn(a,b));
         }
     }
 
     $effect(() => {
-        if (thisHeader && currentSorted?.node?.isSameNode(thisHeader)) {
+        if (thisHeader && sortContext?.currentSortedColumn?.isSameNode(thisHeader)) {
             sortClass = direction=="asc" ? " table-column-sort-asc" : " table-column-sort-dsc";
         }
         else {
