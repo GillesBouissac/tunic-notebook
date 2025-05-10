@@ -1,30 +1,22 @@
-<script>
+<script lang="ts">
   import { Shape, SYMBOL_PARTS } from "$lib/graphics/Symbol.svelte";
   import { SymbolBean } from "$lib/model/SymbolBean.svelte";
-  /** @typedef {import("$lib/graphics/Symbol.svelte").SymbolPart} SymbolPart */
+  import type { SymbolPart } from "$lib/graphics/Symbol.svelte";
 
   /** @type {{bean: SymbolBean, svgClass?: string, segmentWidth?: number }} */
   let { bean, svgClass = "", segmentWidth = 2 } = $props();
 
   let styleSymbolOn = "#000";
   let styleSymbolOff = "#eee";
-  let viewBox = `${-segmentWidth/2} -4 ${20+segmentWidth/2} 44`;
+  let viewBox = `${-segmentWidth/2} -2 ${20+segmentWidth/2} 38`;
   let mouseDown = false;
+  let segmentCodeUnderMouse:number = 0;
 
-  /** @type {SymbolPart[]}*/
-  let symbolElementOn = $state([]);
+  let symbolElementOn: SymbolPart[] = $state([]);
+  let symbolElementOff: SymbolPart[] = $state([]);
+  let lastRenderdCode: number;
 
-  /** @type {SymbolPart[]}*/
-  let symbolElementOff = $state([]);
-
-  /** @type {number} */
-  let lastRenderdCode;
-
-  /**
-   * @param {MouseEvent & { currentTarget: EventTarget & SVGPathElement; }} e
-   * @param {number} code
-   */
-  function onClick(e, code) {
+  function onClick(e: MouseEvent & { currentTarget: EventTarget & SVGPathElement; }, code: number) {
     if (e.target && e.target instanceof SVGGeometryElement) {
       if (isBitSet(bean.code, code)) {
         bean.code = bean.code & ~code;
@@ -33,13 +25,10 @@
       }
     }
   }
-
-  /**
-   * @param {MouseEvent & { currentTarget: EventTarget & SVGPathElement; }} e
-   * @param {number} code
-   */
-  function onMouseEnter(e, code) {
-    if (mouseDown && e.target && e.target instanceof SVGGeometryElement) {
+ 
+  function onMouseEnter(e: MouseEvent & { currentTarget: EventTarget & SVGPathElement; }, code: number) {
+    if (mouseDown && e.target && e.target instanceof SVGGeometryElement && segmentCodeUnderMouse!=code) {
+      segmentCodeUnderMouse = code;
       if (isBitSet(bean.code, code)) {
         bean.code = bean.code & ~code;
       } else {
@@ -48,28 +37,15 @@
     }
   }
 
-  /**
-   * @param {number} value
-   * @param {number} bit
-   */
-  function isBitSet(value, bit) {
+  function isBitSet(value: number, bit: number) {
     return (bit==0) || (value & bit) != 0;
   }
 
-  /** @param {SymbolPart} part */
-  function computeStrokeStyle(part) {
+  function computeStrokeStyle(part:SymbolPart ) {
     return `stroke:${isBitSet(bean.code, part.code)?styleSymbolOn:styleSymbolOff};stroke-width:${segmentWidth}`;
   }
 
-  document.body.onmousedown = function() { 
-    mouseDown = true;
-  }
-  document.body.onmouseup = function() {
-    mouseDown = false;
-  }
-
-  /** @param {SymbolBean} b */
-  function updateSymbol(b) {
+  function updateSymbol(b: SymbolBean) {
     if (lastRenderdCode != b.code) {
       symbolElementOn = [];
       symbolElementOff = [];
@@ -91,11 +67,18 @@
   });
 
   updateSymbol(bean);
+
+  document.body.onmousedown = function(e) { 
+    mouseDown = true;
+  }
+  document.body.onmouseup = function(e) {
+    mouseDown = false;
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-{#snippet renderElement(/** @type {SymbolPart} */ part)}
+{#snippet renderElement( part: SymbolPart)}
   {#if part.shape==Shape.segment}
   <path d="M {part.x1},{part.y1} {part.x2},{part.y2}"
     onclick={(e) => onClick(e, part.code)}
@@ -126,6 +109,7 @@
       <text text-anchor="middle" class="symbol-text" x="10" y="18">tunic({bean.codeString})</text>
     </g>
   </svg>
+  <p class="text-center">tunic({bean.codeString})</p>
 </div>
 
 <style>
