@@ -25,15 +25,21 @@
       }
     }
   }
- 
-  function onMouseEnter(e: MouseEvent & { currentTarget: EventTarget & SVGPathElement; }, code: number) {
-    if (mouseDown && e.target && e.target instanceof SVGGeometryElement && segmentCodeUnderMouse!=code) {
+
+  function onMouseEnter(code: number) {
+    if (mouseDown && segmentCodeUnderMouse!=code) {
       segmentCodeUnderMouse = code;
       if (isBitSet(bean.code, code)) {
         bean.code = bean.code & ~code;
       } else {
         bean.code = bean.code | code;
       }
+    }
+  }
+
+  function onMouseLeave(code: number) {
+    if (segmentCodeUnderMouse==code) {
+      segmentCodeUnderMouse = 0;
     }
   }
 
@@ -82,7 +88,8 @@
   {#if part.shape==Shape.segment}
   <path d="M {part.x1},{part.y1} {part.x2},{part.y2}"
     onclick={(e) => onClick(e, part.code)}
-    onmouseenter={(e) => onMouseEnter(e, part.code)}
+    onmouseenter={(e) => onMouseEnter(part.code)}
+    onmouseleave={(e) => onMouseLeave(part.code)}
     style={computeStrokeStyle(part)}
     class="symbol-segment"
   />
@@ -90,14 +97,15 @@
   {#if part.shape==Shape.circle}
   <circle cx={part.x1} cy={part.y1} r={part.r}
     onclick={(e) => onClick(e, part.code)}
-    onmouseenter={(e) => onMouseEnter(e, part.code)}
+    onmouseenter={(e) => onMouseEnter(part.code)}
+    onmouseleave={(e) => onMouseLeave(part.code)}
     style={computeStrokeStyle(part)}
     class="symbol-segment"
   />
   {/if}
 {/snippet}
 
-<div>
+<div class="flex flex-col">
   <svg {viewBox} class="{svgClass}">
     <g>
       {#each symbolElementOff as part}
@@ -106,7 +114,6 @@
       {#each symbolElementOn as part}
         {@render renderElement(part)}
       {/each}
-      <text text-anchor="middle" class="symbol-text" x="10" y="18">tunic({bean.codeString})</text>
     </g>
   </svg>
   <p class="text-center">tunic({bean.codeString})</p>
