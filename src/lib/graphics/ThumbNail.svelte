@@ -11,7 +11,7 @@
     </A>
 </div>
 <Modal bind:open={zoom} size="xl">
-    <img class="mx-auto" alt="{imageName}" src="/api/screenshots/{imageName}"/>
+    <img class="mx-auto" alt="Missing {imageName}" src="/api/screenshots/{imageName}"/>
 </Modal>
 
 <style>

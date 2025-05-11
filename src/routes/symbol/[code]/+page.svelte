@@ -35,6 +35,7 @@
     }
   }
 
+  let allwords = $state(0);
   $effect(() => {
     items = Object.entries(wordsRef).map((e) => {
       return {
@@ -44,6 +45,11 @@
         refs:e[1]
       }
     });
+    let cpt = 0;
+    Object.keys(wordsRef).forEach((name) => {
+      cpt += wordsRef[name] ? wordsRef[name].length : 0;
+    })
+    allwords = cpt;
   });
 
   $effect(() => {
@@ -58,8 +64,8 @@
     <div class="flex items-center justify-center symbol-big marked-styles">
       {@html markedMain.parse(`tunic(${bean.code})`)}
     </div>
-    <div class="px-5">
-      <Table class="" border={false}>
+    <div class="flex justify-center px-5">
+      <Table class="max-w-1/4" border={false}>
         <TableBody>
           <TableBodyRow>
             <TableBodyCell class="font-bold w-200">Code</TableBodyCell>
@@ -68,16 +74,20 @@
           <TableBodyRow>
             <TableBodyCell class="font-bold">Meaning</TableBodyCell>
             <TableBodyCell>
-              <input class="w-100 text-fuchsia-600 placeholder-fuchsia-200" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="Give it to me ..." />
+              <input class="text-fuchsia-600 placeholder-fuchsia-200" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="Give it to me ..." />
             </TableBodyCell>
           </TableBodyRow>
           <TableBodyRow>
-            <TableBodyCell class="font-bold">Number of words using this symbol</TableBodyCell>
+            <TableBodyCell class="font-bold">Differents words using this symbol</TableBodyCell>
             <TableBodyCell>{Object.keys(wordsRef).length}</TableBodyCell>
           </TableBodyRow>
           <TableBodyRow>
-            <TableBodyCell class="font-bold">Number of files using this symbol</TableBodyCell>
+            <TableBodyCell class="font-bold">Differents files using this symbol</TableBodyCell>
             <TableBodyCell>{Object.keys(filesRef).length}</TableBodyCell>
+          </TableBodyRow>
+          <TableBodyRow>
+            <TableBodyCell class="font-bold">Total number of occurences</TableBodyCell>
+            <TableBodyCell>{allwords}</TableBodyCell>
           </TableBodyRow>
         </TableBody>
       </Table>
@@ -89,7 +99,7 @@
         {#snippet sortableHeadCells(sortContext)}
           <SortableHeadCell {sortContext} sort={(a,b) => a.word.localeCompare(b.word)}>Words</SortableHeadCell>
           <SortableHeadCell {sortContext} sort={(a,b) => a.length - b.length}>Word length</SortableHeadCell>
-          <SortableHeadCell {sortContext} sort={(a,b) => a.count - b.count}>Occurences</SortableHeadCell>
+          <SortableHeadCell {sortContext} sort={(a,b) => a.count - b.count}>Nb occurences</SortableHeadCell>
         {/snippet}
       </SortableHead>
       <TableBody class="overflow-auto">
@@ -102,11 +112,11 @@
           {#if openRow === i}
           <TableBodyRow>
             <TableBodyCell colspan={3} class="p-0">
-              <Table>
+              <Table class="text-center">
                 <TableBody>
                   {#if item.refs}
                     {#each item.refs as ref}
-                    <TableBodyRow onclick={() => goto(`/document-editor/${ref.fileName}?selectStart=${ref.wordStart}&selectLenth=${ref.word.length}`)}>
+                    <TableBodyRow class="cursor-pointer" onclick={() => goto(`/document-editor/${ref.fileName}?selectStart=${ref.wordStart}&selectLenth=${ref.word.length}`)}>
                       <TableBodyCell>{ref.fileName}</TableBodyCell>
                       <TableBodyCell>{ref.wordStart}</TableBodyCell>
                     </TableBodyRow>

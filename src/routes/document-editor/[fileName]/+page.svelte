@@ -1,13 +1,15 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import Fa from 'svelte-fa';
   import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
   import { Marked } from "marked";
   import { Button, Select } from "flowbite-svelte";
   import { decodeSymbols, SymbolBean } from "$lib/model/model.svelte";
-  import { markedTunic, type TunicOptions } from "$lib/marked/marked-tunic.svelte";
+  import { markedTunic } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
   import { NoteTooltip } from '$lib/graphics/graphics.svelte';
+  import { onMount } from 'svelte';
 
   let { data } = $props();
   let alphabet = data.alphabet;
@@ -19,6 +21,8 @@
   let markedDocument: Marked = new Marked(markedTunic({alphabet: alphabet.items, decode:decodeSymbols}));
   let markedShortcuts: Marked = new Marked(markedTunic({urls:false}));
   let fastShapes=[0x0, 0xF77F, 0x312B, 0x5050, 0x605, 0x2022, 0x108, 0x46, 0x3200, 0x6400, 0x55, 0x5600, 0x2432, 0x2262, 0x510D];
+  let selectStart = page.url.searchParams.get("selectStart");
+  let selectLenth = page.url.searchParams.get("selectLenth");
 
   $effect(() => {
     if (alphabet) {
@@ -65,6 +69,15 @@
   function onButtonInsertSymbol() {
     insertText(`tunic(0x${sandboxBean.code.toString(16).toUpperCase()})`);
   }
+
+  onMount(() => {
+    if (selectStart && selectLenth) {
+      let start = parseInt(selectStart);
+      let end = start + parseInt(selectLenth);
+      textarea?.setSelectionRange(start, end, "forward");
+      textarea?.focus();
+    }
+  });
 
 </script>
 

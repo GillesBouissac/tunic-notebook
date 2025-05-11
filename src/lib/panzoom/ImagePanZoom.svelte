@@ -12,7 +12,7 @@
 
 <div class="thumbnail-container h-full">
     <div class="zoomable" min-scale="0.2" bind:this={zoomable} use:pzoom={{panAnywhere:true}}>
-        <img alt="{imageName}" src="/api/screenshots/{imageName}"/>
+        <img alt="Missing {imageName}" src="/api/screenshots/{imageName}"/>
     </div>
 </div>
 

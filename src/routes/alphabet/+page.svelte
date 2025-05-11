@@ -8,7 +8,7 @@
   let { data } = $props();
   let alphabet = data.alphabet;
   let stats = data.stats;
-  let beans: SymbolBean[] = $state([]);
+  let items:{bean:SymbolBean, singlewords:number, singlefile:number, allwords:number}[] = $state([]);
 
   function onMeaningChanged(bean: SymbolBean) {
     return async () => {
@@ -21,39 +21,47 @@
     }
   }
 
-  let beanIndexed: Map<number,SymbolBean> = new Map()
-  beanIndexed = new Map(alphabet.items);
-  stats.items.forEach((_,code) => {
-    if (!beanIndexed.has(code)){
-      beanIndexed.set(code, new SymbolBean(code));
+  items = [...stats.items.entries()].map((entry) => {
+    let b = alphabet.items.get(entry[0]);
+    let allwords = 0;
+    let wordRefs = stats.wordsRef(entry[0]);
+    Object.keys(wordRefs).forEach((name) => {
+      allwords += wordRefs[name] ? wordRefs[name].length : 0;
+    })
+    return {
+      bean:b ? b : new SymbolBean(entry[0]),
+      singlewords:Object.keys(stats.wordsRef(entry[0])).length,
+      singlefile:Object.keys(stats.filesRef(entry[0])).length,
+      allwords:allwords
     }
   });
-  beans = [...beanIndexed.values()];
 
   marked.use(markedTunic({}));
 </script>
 
 <Table hoverable={true} class="text-center table-90">
-  <SortableHead class="sticky top-0" applySort={(itemCmp) => beans.sort(itemCmp)}>
+  <SortableHead class="sticky top-0" applySort={(itemCmp) => items.sort(itemCmp)}>
     {#snippet sortableHeadCells(sortContext)}
-      <SortableHeadCell {sortContext} sort={(a,b) => a.code - b.code}>Symbol</SortableHeadCell>
-      <SortableHeadCell {sortContext} sort={(a,b) => a.code - b.code}>Code</SortableHeadCell>
-      <SortableHeadCell {sortContext} sort={(a,b) => a.meaning.localeCompare(b.meaning)}>Meaning</SortableHeadCell>
-      <SortableHeadCell {sortContext} sort={(a,b) => Object.keys(stats.wordsRef(a.code)).length - Object.keys(stats.wordsRef(b.code)).length}>Word count</SortableHeadCell>
-      <SortableHeadCell {sortContext} sort={(a,b) => Object.keys(stats.filesRef(a.code)).length - Object.keys(stats.filesRef(b.code)).length}>File count</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.bean.code - b.bean.code}>Symbol</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.bean.code - b.bean.code}>Code</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.bean.meaning.localeCompare(b.bean.meaning)}>Meaning</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.singlewords - b.singlewords}>Nb different words</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.singlefile - b.singlefile}>Nb different files</SortableHeadCell>
+      <SortableHeadCell {sortContext} sort={(a,b) => a.allwords - b.allwords}>Nb occurences</SortableHeadCell>
     {/snippet}
   </SortableHead>
   <TableBody class="overflow-auto">
-    {#each beans as bean}
+    {#each items as item}
       <TableBodyRow>
-        <TableBodyCell>{@html marked(`tunic(${bean.code})`)}</TableBodyCell>
-        <TableBodyCell>{bean.codeString}</TableBodyCell>
+        <TableBodyCell>{@html marked(`tunic(${item.bean.code})`)}</TableBodyCell>
+        <TableBodyCell>{item.bean.codeString}</TableBodyCell>
         <TableBodyCell class="meaning">
-          <input class="w-100 text-fuchsia-600 placeholder-fuchsia-200" onchange={onMeaningChanged(bean)} bind:value={bean.meaning} placeholder="Give it to me ..." />
+          <input class="w-100 text-fuchsia-600 placeholder-fuchsia-200" onchange={onMeaningChanged(item.bean)} bind:value={item.bean.meaning} placeholder="Give it to me ..." />
         </TableBodyCell>
         {#if stats}
-          <TableBodyCell>{Object.keys(stats.wordsRef(bean.code)).length}</TableBodyCell>
-          <TableBodyCell>{Object.keys(stats.filesRef(bean.code)).length}</TableBodyCell>
+          <TableBodyCell>{item.singlewords}</TableBodyCell>
+          <TableBodyCell>{item.singlefile}</TableBodyCell>
+          <TableBodyCell>{item.allwords}</TableBodyCell>
         {/if}
       </TableBodyRow>
     {/each}
