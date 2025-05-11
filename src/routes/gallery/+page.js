@@ -4,14 +4,14 @@ import { loadAlphabet, Notebook } from '$lib/model/model.svelte';
 // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-hydration_html_changed
 export const ssr = false;
 
-export async function load ({ fetch }) {
+export async function load ({ params, fetch }) {
 	return { alphabet: await loadAlphabet(fetch), notebooks: await fetchNotebooks(fetch) };
 };
 
-  /**
-   * @param {function(RequestInfo|URL): Promise<Response>} fetch
-   */
-  async function fetchNotebooks(fetch) {
+/**
+ * @param {function(RequestInfo|URL): Promise<Response>} fetch
+ */
+async function fetchNotebooks(fetch) {
 	let documents = []
 	let answer = await fetch("/api/screenshots/list");
 	let images = await answer.json();

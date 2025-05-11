@@ -1,23 +1,18 @@
-<script>
-    /** @type {{ imageName: string, navigateFrom?: function (string): void }} */
-    let { imageName, navigateFrom } = $props();
+<script lang="ts">
+    import { A, Modal } from "flowbite-svelte";
 
-    let documentName = imageName ? imageName.substring(0, imageName.lastIndexOf(".")) + ".json" : undefined;
-
-    function beforeNavigate() {
-        if (navigateFrom ) {
-            navigateFrom(imageName);
-        }
-    }
+    let { imageName }:{imageName: string} = $props();
+    let zoom = $state(false);
 </script>
 
-{#if documentName}
 <div class="thumbnail-container">
-    <a href="/gallery/image?name={imageName}" onclick={beforeNavigate}>
+    <A onclick={() => {zoom=true}}>
         <img alt="{imageName}" src="/api/screenshots/{imageName}" class="mx-auto"/>
-    </a>
+    </A>
 </div>
-{/if}
+<Modal bind:open={zoom} size="xl">
+    <img class="mx-auto" alt="{imageName}" src="/api/screenshots/{imageName}"/>
+</Modal>
 
 <style>
     .thumbnail-container {

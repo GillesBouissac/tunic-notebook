@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import { marked } from "marked";
   import { SymbolBean } from "$lib/model/model.svelte.js";
 	import { markedTunic } from "$lib/marked/marked-tunic.svelte";
-  import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import { SortableHead, SortableHeadCell } from "$lib/graphics/graphics.svelte.js";
 
   let { data } = $props();
@@ -10,7 +10,6 @@
   let stats = data.stats;
   let beans: SymbolBean[] = $state([]);
 
-  /** @param {SymbolBean} bean */
   function onMeaningChanged(bean: SymbolBean) {
     return async () => {
       if (bean.meaning == "") {

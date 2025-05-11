@@ -3,8 +3,11 @@
   import { SymbolBean } from "$lib/model/SymbolBean.svelte";
   import type { SymbolPart } from "$lib/graphics/Symbol.svelte";
 
-  /** @type {{bean: SymbolBean, svgClass?: string, segmentWidth?: number }} */
-  let { bean, svgClass = "", segmentWidth = 2 } = $props();
+  let { bean, svgClass = "", segmentWidth = 2 }:{
+    bean: SymbolBean,
+    svgClass?: string,
+    segmentWidth?: number
+  } = $props();
 
   let styleSymbolOn = "#000";
   let styleSymbolOff = "#eee";
@@ -16,13 +19,12 @@
   let symbolElementOff: SymbolPart[] = $state([]);
   let lastRenderdCode: number;
 
-  function onClick(e: MouseEvent & { currentTarget: EventTarget & SVGPathElement; }, code: number) {
-    if (e.target && e.target instanceof SVGGeometryElement) {
-      if (isBitSet(bean.code, code)) {
-        bean.code = bean.code & ~code;
-      } else {
-        bean.code = bean.code | code;
-      }
+  function onClick(code: number) {
+    segmentCodeUnderMouse = code;
+    if (isBitSet(bean.code, code)) {
+      bean.code = bean.code & ~code;
+    } else {
+      bean.code = bean.code | code;
     }
   }
 
@@ -64,7 +66,6 @@
         }
       }
       lastRenderdCode = b.code;
-
     }
   }
 
@@ -72,14 +73,14 @@
     updateSymbol(bean);
   });
 
-  updateSymbol(bean);
-
   document.body.onmousedown = function(e) { 
     mouseDown = true;
   }
   document.body.onmouseup = function(e) {
     mouseDown = false;
   }
+
+  updateSymbol(bean);
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -87,7 +88,7 @@
 {#snippet renderElement( part: SymbolPart)}
   {#if part.shape==Shape.segment}
   <path d="M {part.x1},{part.y1} {part.x2},{part.y2}"
-    onclick={(e) => onClick(e, part.code)}
+    onmousedown={(e) => onClick(part.code)}
     onmouseenter={(e) => onMouseEnter(part.code)}
     onmouseleave={(e) => onMouseLeave(part.code)}
     style={computeStrokeStyle(part)}
@@ -96,7 +97,7 @@
   {/if}
   {#if part.shape==Shape.circle}
   <circle cx={part.x1} cy={part.y1} r={part.r}
-    onclick={(e) => onClick(e, part.code)}
+    onmousedown={(e) => onClick(part.code)}
     onmouseenter={(e) => onMouseEnter(part.code)}
     onmouseleave={(e) => onMouseLeave(part.code)}
     style={computeStrokeStyle(part)}

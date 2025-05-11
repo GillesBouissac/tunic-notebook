@@ -51,16 +51,16 @@ function isBitSet(value: number, bit: number): boolean {
     return (bit==0) || (value & bit) != 0;
 }
 
-function svgColor(highlight:boolean) {
-    return highlight ? "rgb(255, 195, 0)" : "rgb(0,0,0)";
+function segmentColor(highlight:boolean) {
+    return highlight ? "stroke:rgb(255, 195, 0);" : "";
 }
 
 function renderSegment(code: number, segment: SymbolPart, opacity: string, urls:boolean, highlight:boolean): string {
-    return `<path d="M ${segment.x1},${segment.y1} ${segment.x2},${segment.y2}" style="stroke:${svgColor(highlight)};opacity:${opacity}" />`;
+    return `<path d="M ${segment.x1},${segment.y1} ${segment.x2},${segment.y2}" style="${segmentColor(highlight)}opacity:${opacity}" />`;
 }
 
 function renderCircle(code: number, segment: SymbolPart, opacity: string, urls:boolean, highlight:boolean): string {
-    return `<circle cx="${segment.x1}" cy="${segment.y1}" r="${segment.r}" style="fill:none;stroke:${svgColor(highlight)};opacity:${opacity}" />`;
+    return `<circle cx="${segment.x1}" cy="${segment.y1}" r="${segment.r}" style="fill:none;${segmentColor(highlight)}opacity:${opacity}" />`;
 }
 
 function renderHeader(code: number, meaning: string|undefined, urls:boolean, highlight:boolean): string {
@@ -75,13 +75,13 @@ function renderHeader(code: number, meaning: string|undefined, urls:boolean, hig
     const style = _style.replaceAll(/\n/g, "").replaceAll(/[ ]/g, "")
     let result = "";
     if (urls) {
-        result += `<a href='/symbol/0x${code.toString(16).toUpperCase()}' >`;
+        result += `<a style="color:inherit;:visited{color:inherit};" href='/symbol/0x${code.toString(16).toUpperCase()}' >`;
     }
     if (meaning && meaning != "") {
-        result += `<span style="color:var(--decoded-color, blue)">${meaning}`;
+        result += `<span class="tunic-symbol" style="color:var(--decoded-color, blue)">${meaning}`;
     }
     else {
-        result += `<span><svg viewBox="-1 -4 22 44" style="${style}">
+        result += `<span class="tunic-symbol"><svg viewBox="-1 -4 22 44" style="${style}">
         <g>
     `;
     }

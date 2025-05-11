@@ -1,31 +1,24 @@
-<script>
+<script lang="ts">
   import Fa from 'svelte-fa';
-  import { faBatteryEmpty, faBatteryFull, faFileArrowDown, faKey, faRepeat } from '@fortawesome/free-solid-svg-icons';
-  import { marked } from "marked";
-  import { Button, Select, Toggle } from "flowbite-svelte";
+  import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
+  import { Marked } from "marked";
+  import { Button, Select } from "flowbite-svelte";
   import { decodeSymbols, SymbolBean } from "$lib/model/model.svelte";
-  import { markedTunic } from "$lib/marked/marked-tunic.svelte";
+  import { markedTunic, type TunicOptions } from "$lib/marked/marked-tunic.svelte";
   import { SymbolInteractive } from "$lib/graphics/graphics.svelte";
   import ImagePanZoom from "$lib/panzoom/ImagePanZoom.svelte";
   import { NoteTooltip } from '$lib/graphics/graphics.svelte';
-  /** @import { TunicOptions } from '$lib/marked/marked-tunic.svelte' */
 
   let { data } = $props();
   let alphabet = data.alphabet;
   let notebook = $derived(data.notebook);
   let documentName = $derived(data.document);
-
-  /** @type {HTMLTextAreaElement|undefined} */
-  let textarea = $state();
-
-  /** @type {{name:string, value: number}[]}} */
-  let selectBean =$state([]);
-
-  /** @type {TunicOptions}*/
-  let markedOptions = {alphabet: alphabet.items, decode:decodeSymbols};
-
-  /** @type {SymbolBean} */
-  let sandboxBean = new SymbolBean(0xFFFF);
+  let textarea:HTMLTextAreaElement|undefined = $state();
+  let selectBean:{name:string, value: number}[] =$state([]);
+  let sandboxBean: SymbolBean = new SymbolBean(0xFFFF);
+  let markedDocument: Marked = new Marked(markedTunic({alphabet: alphabet.items, decode:decodeSymbols}));
+  let markedShortcuts: Marked = new Marked(markedTunic({urls:false}));
+  let fastShapes=[0x0, 0xF77F, 0x312B, 0x5050, 0x605, 0x2022, 0x108, 0x46, 0x3200, 0x6400, 0x55, 0x5600, 0x2432, 0x2262, 0x510D];
 
   $effect(() => {
     if (alphabet) {
@@ -39,27 +32,33 @@
     saveDocument(notebook?.text)
   });
 
-  /** @param {string | undefined} text */
-  function saveDocument(text) {
+  function saveDocument(text:string|undefined) {
     notebook?.upload();
   }
 
-  /**
-   * Insert text in textArea at current position
-   * @param text {string}
-   */
-  function insertText (text) {
+  /** Insert text in textArea at current position */
+  function insertText (text:string) {
     if (textarea) {
       textarea.focus();
+      // Deprecated yes, but for now we need this to add the insertion
+      //   into the undo list (Ctrl+Z) of the browser.
       document.execCommand("insertText", false, text);
     }
   };
 
-  /** @param {KeyboardEvent} event */
-  function handleKeyDown (event) {
+  function handleKeyDown (event:KeyboardEvent) {
     if (event.key == "Tab") {
       insertText('\t');
       event.preventDefault();
+    }
+  }
+
+  function onFastShape(e: MouseEvent & { currentTarget: EventTarget & HTMLDivElement; }, code: number) {
+    if (e.shiftKey) {
+      sandboxBean.code |= code;
+    }
+    else {
+      sandboxBean.code = code;
     }
   }
 
@@ -67,14 +66,13 @@
     insertText(`tunic(0x${sandboxBean.code.toString(16).toUpperCase()})`);
   }
 
-  marked.use(markedTunic(markedOptions));
 </script>
 
 {#if notebook && alphabet}
 <div class="grid grid-cols-2 w-full">
 
-  <div class="m-2 h-full">
-    <div class="grid grid-cols-6 w-full m-2">
+  <div class="p-2 h-full">
+    <div class="grid grid-cols-6 w-full p-2">
       <div class="mx-auto w-full col-span-3">
         <ImagePanZoom imageName={notebook.image}></ImagePanZoom>
         <NoteTooltip placement="bottom">You can pan and zoom this image to focus on symbols</NoteTooltip>
@@ -85,18 +83,18 @@
       <NoteTooltip placement="bottom">Use this tool to reproduce a symbol you see in the image</NoteTooltip>
       <div class="button-bo grid grid-cols-1 p-4">
         <Select class="text-center" placeholder="Alphabet ..." items={selectBean} bind:value={sandboxBean.code}></Select>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=0x0000}}>
-          <Fa icon={faBatteryEmpty} /><span>&nbsp;Empty</span>
-        </Button>
-        <NoteTooltip placement="right">Empties all the segments</NoteTooltip>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=0xFFFF}}>
-          <Fa icon={faBatteryFull} /><span>&nbsp;Full</span>
-        </Button>
-        <NoteTooltip placement="right">Fills all the segments</NoteTooltip>
-        <Button shadow class="px-4 mt-2" color="dark" onclick={() => {sandboxBean.code=~sandboxBean.code}}>
-          <Fa icon={faRepeat} /><span>&nbsp;Invert</span>
-        </Button>
-        <NoteTooltip placement="right">Invert every segment</NoteTooltip>
+
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="button-box flex flex-wrap my-4 p-0">
+          {#each fastShapes as fastShape}
+            <div class="mx-1" onclick={(e) => {onFastShape(e, fastShape)}}>
+              {@html markedShortcuts.parse(`tunic(${fastShape})`)}
+            </div>
+          {/each}
+        </div>
+        <NoteTooltip placement="right">&lt;click&gt; to set the symbol with this shape<br>&lt;Shift&gt;&lt;click&gt; to add this shape to the symbol</NoteTooltip>
+
         <Button shadow class="px-4 mt-2" color="blue" onclick={onButtonInsertSymbol}>
             <Fa icon={faFileArrowDown} /><span>&nbsp;Insert</span>
         </Button>
@@ -104,12 +102,12 @@
       </div>
     </div>
 
-    <div>
+    <div class="m-0">
       <textarea bind:this={textarea} class="text-box border-0" bind:value={notebook.text} onkeydown={handleKeyDown}></textarea>
     </div>
   </div>
-  <div>
-    <div class="marked-styles marked-box overflow-auto m-2">{@html marked(notebook.text)}</div>
+  <div class="marked-box p-2">
+    <div class="marked-styles marked-box overflow-auto">{@html markedDocument.parse(notebook.text)}</div>
   </div>
 </div>
 
@@ -123,11 +121,11 @@
   :global(.image-box) {
     height: 30dvh;
   }
-  :global(.text-box) {
-    height: 58dvh;
+  .text-box {
+    height: 52dvh;
     width: 100%;
   }
-  :global(.marked-box) {
+  .marked-box {
     max-height: 90dvh;
   }
 </style>

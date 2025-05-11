@@ -2,17 +2,27 @@
   import { Marked } from 'marked';
   import { Table, TableBody, TableBodyCell, TableBodyRow } from 'flowbite-svelte';
   import { markedTunic } from '$lib/marked/marked-tunic.svelte.js';
-  import { SymbolBean } from '$lib/model/model.svelte.js';
+  import { Alphabet, Statistics, SymbolBean, TokenContext } from '$lib/model/model.svelte.js';
   import { decodeSymbols } from '$lib/model/stores.svelte.js';
   import { SortableHead, SortableHeadCell } from '$lib/graphics/graphics.svelte.js';
+  import { goto } from '$app/navigation';
 
-  let { data } = $props();
+  let { data }: {data: {alphabet: Alphabet, stats:Statistics, code:string}} = $props();
   let alphabet = data.alphabet;
   let stats = data.stats;
-  let code = $derived(parseInt(data.code));
 
+  let code = $derived(parseInt(data.code));
   let knownBean = $derived(alphabet?.items.get(code));
   let bean = $derived(knownBean ? knownBean : new SymbolBean(code));
+  let _wordsRef = $derived(stats.wordsRef(bean.code));
+  let _filesRef = $derived(stats.filesRef(bean.code));
+  let wordsRef = $derived(_wordsRef ? _wordsRef : {});
+  let filesRef = $derived(_filesRef ? _filesRef : {});
+  let items:{word:string, length:number, count:number, refs?:TokenContext[]}[] = $state([]);
+  let highlight = $derived({code:code});
+  let markedMain: Marked = new Marked(markedTunic({alphabet:undefined, urls: false, decode:{value:false}}));
+  let markedList: Marked = $state(new Marked());
+  let openRow: number|null = $state(null);
 
   function onMeaningChanged(bean: SymbolBean) {
     return async () => {
@@ -25,35 +35,16 @@
     }
   }
 
-  let _wordsRef = $derived(stats.wordsRef(bean.code));
-  let _filesRef = $derived(stats.filesRef(bean.code));
-  let wordsRef = $derived(_wordsRef ? _wordsRef : {});
-  let filesRef = $derived(_filesRef ? _filesRef : {});
-
-  type TableItem = {
-    word:string,
-    length:number,
-    count:number
-  };
-
-  let items: TableItem[] = $state([]);
   $effect(() => {
     items = Object.entries(wordsRef).map((e) => {
       return {
         word:e[0],
         length:e[1] ? e[1][0].wordChars.length : 0,
-        count:e[1] ? e[1].length : 0
+        count:e[1] ? e[1].length : 0,
+        refs:e[1]
       }
     });
   });
-
-  function applySort(sortFn: any) {
-    items.sort(sortFn);
-  }
-
-  let highlight = $derived({code:code});
-  let markedMain = new Marked(markedTunic({alphabet:undefined, urls: false, decode:{value:false}}));
-  let markedList: Marked = $state(new Marked());
 
   $effect(() => {
     markedList = new Marked(markedTunic({alphabet:alphabet.items, decode:decodeSymbols, highlight:highlight}));
@@ -64,7 +55,7 @@
 {#if bean}
 <div class="grid grid-cols-3">
   <div class="grid grid-cols-1">
-    <div class="flex items-center justify-center symbol-big">
+    <div class="flex items-center justify-center symbol-big marked-styles">
       {@html markedMain.parse(`tunic(${bean.code})`)}
     </div>
     <div class="px-5">
@@ -102,12 +93,30 @@
         {/snippet}
       </SortableHead>
       <TableBody class="overflow-auto">
-        {#each items as item}
-        <TableBodyRow>
-          <TableBodyCell>{@html markedList.parse(item.word)}</TableBodyCell>
+        {#each items as item, i}
+        <TableBodyRow onclick={() => openRow = openRow === i ? null : i}>
+          <TableBodyCell class="marked-styles">{@html markedList.parse(item.word)}</TableBodyCell>
           <TableBodyCell>{item.length}</TableBodyCell>
           <TableBodyCell>{item.count}</TableBodyCell>
         </TableBodyRow>
+          {#if openRow === i}
+          <TableBodyRow>
+            <TableBodyCell colspan={3} class="p-0">
+              <Table>
+                <TableBody>
+                  {#if item.refs}
+                    {#each item.refs as ref}
+                    <TableBodyRow onclick={() => goto(`/document-editor/${ref.fileName}?selectStart=${ref.wordStart}&selectLenth=${ref.word.length}`)}>
+                      <TableBodyCell>{ref.fileName}</TableBodyCell>
+                      <TableBodyCell>{ref.wordStart}</TableBodyCell>
+                    </TableBodyRow>
+                    {/each}
+                  {/if}
+                </TableBody>
+              </Table>
+            </TableBodyCell>
+          </TableBodyRow>
+          {/if}
         {/each}
       </TableBody>
     </Table>
